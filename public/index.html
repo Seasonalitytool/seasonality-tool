@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SeasonalityTool — S&amp;P 500 Seasonality</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📈</text></svg>" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M3 17L9 11L13 15L21 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M15 6H21V12" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </span>
+        <span class="brand-name">Seasonality<span class="brand-accent">Tool</span></span>
+      </div>
+      <div class="topbar-meta" id="topbarMeta">S&amp;P 500 · loading…</div>
+    </header>
+
+    <main class="content">
+      <section class="panel">
+        <div class="panel-header">
+          <div>
+            <h1>S&amp;P&nbsp;500 Seasonal Pattern</h1>
+            <p class="panel-sub" id="panelSub">Average cumulative % return by calendar day, across all available historical years.</p>
+          </div>
+          <div class="stat-pill" id="statPill">
+            <span class="stat-label">Year-end average</span>
+            <span class="stat-value" id="statValue">—</span>
+          </div>
+        </div>
+
+        <div class="controls-row">
+          <div class="filter-bar" role="group" aria-label="Year filter" id="filterBar">
+            <button class="filter-btn is-active" type="button" data-filter="all">All years</button>
+            <button class="filter-btn" type="button" data-filter="bull">Bull years</button>
+            <button class="filter-btn" type="button" data-filter="bear">Bear years</button>
+          </div>
+
+          <div class="range-slider-wrap">
+            <div class="range-slider-label">
+              <span>Year range</span>
+              <span id="rangeLabel">—</span>
+            </div>
+            <div class="range-slider" id="rangeSlider">
+              <div class="range-track"></div>
+              <div class="range-fill" id="rangeFill"></div>
+              <input type="range" id="rangeMin" class="range-input range-input-min" step="1" />
+              <input type="range" id="rangeMax" class="range-input range-input-max" step="1" />
+            </div>
+          </div>
+        </div>
+
+        <div class="era-bar" role="group" aria-label="Historical era presets" id="eraBar"></div>
+
+        <div class="chart-wrap">
+          <canvas id="seasonalityChart"></canvas>
+        </div>
+
+        <p class="hover-readout" id="hoverReadout">
+          <span id="hrDate">—</span><span class="hr-sep"> · </span><span id="hrValue">—</span><span class="hr-sep"> · </span><span id="hrSample"></span>
+        </p>
+
+        <div class="panel-footer">
+          <span id="footerNote">Loading historical data…</span>
+        </div>
+      </section>
+    </main>
+
+    <footer class="app-footer">
+      Data: Yahoo Finance (^GSPC, daily close). Past performance does not indicate future results.
+    </footer>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
