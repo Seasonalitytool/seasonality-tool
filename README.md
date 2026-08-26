@@ -1,50 +1,45 @@
 # SeasonalityTool
 
-A clean, minimal fintech dashboard showing the S&P 500's average seasonal
-pattern: one composite line plotting the average cumulative % return across
-all available historical years, day-by-day from Jan 1 to Dec 31.
+A seasonal S&P 500 chart: the average cumulative % return by calendar day,
+computed across historical years, with Bull/Bear filtering and a year-range
+slider.
 
-## How it works
+**Free**: S&P 500 chart, year-range slider, Bull/Bear years filter.
+**Pro (coming soon)**: election-cycle filter (Election/Post-Election/Midterm/
+Pre-Election year), era presets, current-year overlay, and multi-symbol
+comparison (search any US ticker and add it to the chart).
 
-- **Data**: real daily S&P 500 (`^GSPC`) closes pulled from Yahoo Finance's
-  public chart endpoint (`query1.finance.yahoo.com`).
-- **Method**: for every full historical calendar year, each day's close is
-  normalized against that year's first trading day (= 0%), producing a daily
-  cumulative % return path. Non-trading days (weekends/holidays) are
-  forward-filled so every year has a value for every calendar day. All years
-  are then averaged together, day-by-day, into one composite seasonal line —
-  the same approach used by EquityClock-style seasonal charts.
-- **Rendering**: the composite is pre-computed into `public/data.js` (plain
-  JS, no server/build step needed) and plotted with Chart.js as a smooth,
-  interactive line with hover tooltips.
-
-## Running it
-
-No build step, no dependencies to install. Just open the app:
+## Running locally
 
 ```bash
-start public/index.html
+powershell -File scripts/serve.ps1
 ```
 
-(or double-click `public/index.html`).
+Then open `http://localhost:8080`. Opening `public/index.html` directly
+(file://) also works for the free tier, but the ticker-search feature needs
+the server running (it proxies Yahoo Finance requests server-side to avoid
+the browser's CORS restriction).
 
-## Refreshing the data
-
-Re-run the fetch/compute script any time to pull the latest prices and
-regenerate `public/data.js`:
+## Refreshing data
 
 ```bash
-powershell -File scripts/update-data.ps1
+powershell -File scripts/update-data.ps1      # S&P 500 seasonal data
+powershell -File scripts/build-tickers.ps1    # ticker search list
 ```
 
-## Structure
+## Accounts & Pro features
 
-```
-public/
-  index.html      – page shell
-  style.css       – dashboard styling
-  app.js          – Chart.js setup, tooltip formatting
-  data.js         – generated seasonal dataset (do not edit by hand)
-scripts/
-  update-data.ps1 – fetches Yahoo Finance data & recomputes the seasonal composite
-```
+Auth is handled by Supabase (`public/supabase-config.js` holds the project
+URL and public/anon key — safe to be public, protected by Row Level
+Security). Run `scripts/supabase-setup.sql` once in the Supabase SQL editor
+to create the `profiles` table used to track Pro status.
+
+Stripe billing isn't wired up yet — the "Upgrade to Pro" button currently
+shows a "coming soon" message. To manually grant Pro to an account for
+testing, set `is_pro = true` on that user's row in the `profiles` table.
+
+## Deployment
+
+Pushing to `main`/`master` deploys `public/` to GitHub Pages automatically
+via `.github/workflows/deploy.yml`. One-time setup in the repo: **Settings →
+Pages → Source → GitHub Actions**.
