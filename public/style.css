@@ -446,6 +446,10 @@ body {
   margin: -2px 0 10px 2px;
 }
 
+.symbol-legend[hidden] {
+  display: none;
+}
+
 .symbol-legend {
   display: flex;
   flex-wrap: wrap;
@@ -913,6 +917,10 @@ body {
    to the right of each locked control group (not absolutely positioned —
    that drifted to a different-looking spot on every section depending on
    that section's own width). */
+.pro-badge[hidden] {
+  display: none;
+}
+
 .pro-badge {
   display: inline-flex;
   align-items: center;
