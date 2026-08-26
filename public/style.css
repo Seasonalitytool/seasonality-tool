@@ -939,6 +939,10 @@ body {
   padding: 20px;
 }
 
+.modal-overlay[hidden] {
+  display: none;
+}
+
 .modal {
   position: relative;
   width: 100%;
