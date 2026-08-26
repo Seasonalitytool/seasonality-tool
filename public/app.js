@@ -87,6 +87,13 @@
     [cycleBarRowEl, eraBarEl, overlayWrapEl, symbolSearchRowEl, symbolLegendEl].forEach((el) => {
       if (el) el.classList.toggle("is-locked", !unlocked);
     });
+    // One "🔒 Pro" badge per locked section, always in the same spot —
+    // immediately to the right of that section's own controls — instead of
+    // a CSS-generated badge that landed in a different-looking place on
+    // every section depending on that section's own width.
+    [cycleProBadgeEl, eraProBadgeEl, overlayProBadgeEl, searchProBadgeEl].forEach((el) => {
+      if (el) el.hidden = unlocked;
+    });
   }
 
   const cycleBarRowEl = document.querySelector(".cycle-bar-row");
@@ -94,6 +101,10 @@
   const overlayWrapEl = document.getElementById("overlayToggleWrap");
   const symbolSearchRowEl = document.querySelector(".symbol-search-row");
   const symbolLegendEl = document.getElementById("symbolLegend");
+  const cycleProBadgeEl = document.getElementById("cycleProBadge");
+  const overlayProBadgeEl = document.getElementById("overlayProBadge");
+  const searchProBadgeEl = document.getElementById("searchProBadge");
+  let eraProBadgeEl = null; // created once era-bar's buttons exist, see below
 
   if (window.SeasonalityAuth) {
     window.SeasonalityAuth.onChange(updateLockedUI);
@@ -801,6 +812,13 @@
       eraButtons.push(btn);
     });
     syncEraActiveState();
+
+    eraProBadgeEl = document.createElement("span");
+    eraProBadgeEl.className = "pro-badge";
+    eraProBadgeEl.id = "eraProBadge";
+    eraProBadgeEl.textContent = "🔒 Pro";
+    eraProBadgeEl.hidden = isProUnlocked();
+    eraBar.appendChild(eraProBadgeEl);
   }
 
   // ---- Current-year overlay toggle -------------------------------------------
