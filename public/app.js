@@ -1022,7 +1022,8 @@
     }
 
     try {
-      const res = await fetch(`/api/history?symbol=${encodeURIComponent(symbol)}`);
+      const apiBase = window.API_BASE_URL || "";
+      const res = await fetch(`${apiBase}/api/history?symbol=${encodeURIComponent(symbol)}`);
       const json = await res.json().catch(() => ({}));
       if (!res.ok || json.error) {
         throw new Error(json.error || `HTTP ${res.status}`);
@@ -1067,10 +1068,11 @@
   }
 
   if (symbolInput) {
-    if (location.protocol === "file:") {
-      // Adding a new symbol needs a same-origin fetch to /api/history (see
-      // scripts/serve.ps1) to avoid the browser's CORS block on Yahoo
-      // Finance — that route only exists when the app is actually served.
+    if (location.protocol === "file:" && !window.API_BASE_URL) {
+      // Adding a new symbol needs a fetch to /api/history (see
+      // scripts/serve.ps1 or api/history.js on Vercel) to avoid the
+      // browser's CORS block on Yahoo Finance — with no server running and
+      // no configured API_BASE_URL, that route isn't reachable from file://.
       symbolInput.disabled = true;
       symbolInput.placeholder = "Run via scripts/serve.ps1 to search & compare other tickers";
     } else {
