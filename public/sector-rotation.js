@@ -49,13 +49,20 @@
   // unpublished; this is a standard, widely-used approximation (relative
   // price, smoothed, expressed as a z-score around 100) that produces the
   // same reading: 100 = in-line with the benchmark, >100 = outperforming.
-  const SHORT_SMOOTH = 10; // smooths day-to-day noise out of the raw ratio
-  const BASELINE_WINDOW = 30; // "normal" relative level to compare against
-  const MOMENTUM_WINDOW = 10; // trailing window the ROC is measured over
+  // Each timeframe gets its own windows (in BAR count, not calendar time) —
+  // daily needs more smoothing since each bar is noisier; weekly/monthly
+  // bars are already smoother, so shorter windows respond better.
   const RATIO_SCALE = 10; // spreads the z-score into a readable ~90-110 band
   const MOMENTUM_SCALE = 3;
-  const TAIL_LENGTH = 8; // trailing points shown per sector (5-10 requested)
-  const FETCH_DAYS = 300; // comfortably covers baseline+momentum+tail windows
+  const TIMEFRAME_PRESETS = {
+    daily: { shortSmooth: 10, baseline: 30, momentum: 10, tail: 8 },
+    weekly: { shortSmooth: 4, baseline: 12, momentum: 4, tail: 8 },
+    monthly: { shortSmooth: 2, baseline: 6, momentum: 3, tail: 6 },
+  };
+  // One fetch covers every timeframe (no re-fetching on toggle) — ~1500
+  // trading days is ~6 years, comfortably enough for monthly's windows too.
+  const FETCH_DAYS = 1500;
+  let currentTimeframe = "daily";
 
   function sma(arr, window) {
     const out = new Array(arr.length).fill(null);
@@ -82,9 +89,35 @@
     return out;
   }
 
+  // Buckets daily {dates, closes} into weekly (Mon-Sun) or monthly bars,
+  // keeping the last close in each bucket. No-op for "daily".
+  function mondayOf(dateStr) {
+    const dt = new Date(dateStr + "T00:00:00Z");
+    const day = dt.getUTCDay(); // 0=Sun..6=Sat
+    const diff = day === 0 ? -6 : 1 - day;
+    dt.setUTCDate(dt.getUTCDate() + diff);
+    return dt.toISOString().slice(0, 10);
+  }
+
+  function resample(dates, closes, timeframe) {
+    if (timeframe === "daily") return { dates, closes };
+    const buckets = new Map();
+    for (let i = 0; i < dates.length; i++) {
+      const key = timeframe === "weekly" ? mondayOf(dates[i]) : dates[i].slice(0, 7);
+      buckets.set(key, { date: dates[i], close: closes[i] }); // last write per key wins
+    }
+    const outDates = [];
+    const outCloses = [];
+    buckets.forEach((v) => {
+      outDates.push(v.date);
+      outCloses.push(v.close);
+    });
+    return { dates: outDates, closes: outCloses };
+  }
+
   // Aligns a symbol's closes against the benchmark by date, then computes
   // the RS-Ratio / RS-Momentum series (see constants above for the method).
-  function computeRRG(benchDates, benchCloses, symDates, symCloses) {
+  function computeRRG(benchDates, benchCloses, symDates, symCloses, preset) {
     const benchMap = new Map();
     for (let i = 0; i < benchDates.length; i++) benchMap.set(benchDates[i], benchCloses[i]);
 
@@ -99,9 +132,9 @@
     // index are rare and inconsequential for this smoothed computation.
     const clean = relative.filter((v) => v !== null);
 
-    const shortSma = sma(clean, SHORT_SMOOTH);
-    const longSma = sma(clean, BASELINE_WINDOW);
-    const longStd = rollingStd(clean, longSma, BASELINE_WINDOW);
+    const shortSma = sma(clean, preset.shortSmooth);
+    const longSma = sma(clean, preset.baseline);
+    const longStd = rollingStd(clean, longSma, preset.baseline);
 
     const rsRatio = clean.map((_, i) => {
       if (shortSma[i] == null || longSma[i] == null || !longStd[i]) return null;
@@ -110,7 +143,7 @@
 
     const rsMomentum = rsRatio.map((v, i) => {
       if (v == null) return null;
-      const prevIdx = i - MOMENTUM_WINDOW;
+      const prevIdx = i - preset.momentum;
       if (prevIdx < 0 || rsRatio[prevIdx] == null) return null;
       return 100 + (v - rsRatio[prevIdx]) * MOMENTUM_SCALE;
     });
@@ -244,10 +277,20 @@
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
 
+    const preset = TIMEFRAME_PRESETS[currentTimeframe] || TIMEFRAME_PRESETS.daily;
+    const benchResampled = benchmark ? resample(benchmark.dates, benchmark.closes, currentTimeframe) : null;
+
     series.forEach((s) => {
-      if (!benchmark) return;
-      const { rsRatio, rsMomentum } = computeRRG(benchmark.dates, benchmark.closes, s.dates, s.closes);
-      s.tail = tailPoints(rsRatio, rsMomentum, TAIL_LENGTH);
+      if (!benchResampled) return;
+      const symResampled = resample(s.dates, s.closes, currentTimeframe);
+      const { rsRatio, rsMomentum } = computeRRG(
+        benchResampled.dates,
+        benchResampled.closes,
+        symResampled.dates,
+        symResampled.closes,
+        preset
+      );
+      s.tail = tailPoints(rsRatio, rsMomentum, preset.tail);
     });
 
     const datasets = series
@@ -328,6 +371,13 @@
     }
 
     renderLegend();
+
+    if (series.length) {
+      const tfLabel = currentTimeframe.charAt(0).toUpperCase() + currentTimeframe.slice(1);
+      setFooter(
+        `Sector Rotation · ${tfLabel} · benchmark ${BENCHMARK_SYMBOL} · ${series.length} sector${series.length === 1 ? "" : "s"} tracked · source: Yahoo Finance`
+      );
+    }
   }
 
   function renderLegend() {
@@ -397,10 +447,7 @@
         });
       });
       if (!series.length) throw new Error("no sector data available");
-      buildChart();
-      setFooter(
-        `Sector Rotation · benchmark ${BENCHMARK_SYMBOL} · ${series.length} of 11 sectors loaded · source: Yahoo Finance`
-      );
+      buildChart(); // also sets the footer text with the loaded sector count
     } catch (err) {
       setFooter(`Couldn't load sector data (${(err && err.message) || err}).`);
     }
@@ -555,6 +602,20 @@
       const badge = document.getElementById("rrgTabProBadge");
       if (badge) badge.hidden = isProUnlocked();
       if (currentView() === "sector-rotation") activate();
+    });
+  }
+
+  // ---- Timeframe toggle (Daily / Weekly / Monthly) ---------------------------
+  const timeframeBar = document.getElementById("rrgTimeframeBar");
+  if (timeframeBar) {
+    timeframeBar.addEventListener("click", (e) => {
+      const btn = e.target.closest(".filter-btn");
+      if (!btn) return;
+      const tf = btn.getAttribute("data-timeframe");
+      if (!tf || tf === currentTimeframe) return;
+      currentTimeframe = tf;
+      timeframeBar.querySelectorAll(".filter-btn").forEach((b) => b.classList.toggle("is-active", b === btn));
+      if (initialized) buildChart();
     });
   }
 

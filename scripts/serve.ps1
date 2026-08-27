@@ -196,7 +196,7 @@ while ($listener.IsListening) {
             $daysParam = $req.QueryString["days"]
             $days = 300
             if ($daysParam) { [int]::TryParse($daysParam, [ref]$days) | Out-Null }
-            $days = [Math]::Min(500, [Math]::Max(60, $days))
+            $days = [Math]::Min(1600, [Math]::Max(60, $days))
             $res.ContentType = "application/json; charset=utf-8"
             if (-not $sym -or $sym.Trim() -eq "") {
                 $res.StatusCode = 400

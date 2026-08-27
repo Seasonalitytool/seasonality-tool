@@ -62,7 +62,7 @@ module.exports = async (req, res) => {
   }
 
   const symbol = (req.query.symbol || "").toString().trim();
-  const days = Math.min(500, Math.max(60, parseInt(req.query.days, 10) || 300));
+  const days = Math.min(1600, Math.max(60, parseInt(req.query.days, 10) || 300));
   if (!symbol) {
     res.status(400).json({ error: "missing symbol" });
     return;
