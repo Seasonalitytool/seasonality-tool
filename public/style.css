@@ -319,6 +319,7 @@ body {
 
 /* ---------- Symbol search + compare ---------- */
 .symbol-search-row {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 10px;
@@ -646,14 +647,15 @@ body {
 
 /* ---------- Election-cycle filter ---------- */
 .cycle-bar-row {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 12px;
   flex-wrap: wrap;
   margin-bottom: 18px;
   /* Shrink to fit the buttons instead of stretching across the whole panel
-     — otherwise the trailing Pro badge ends up far from the actual buttons
-     on wide screens. */
+     — otherwise the corner-pinned Pro badge ends up far from the actual
+     buttons on wide screens. */
   width: fit-content;
   max-width: 100%;
 }
@@ -677,6 +679,7 @@ body {
 
 /* ---------- Era presets ---------- */
 .era-bar {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 7px;
@@ -735,6 +738,7 @@ body {
 
 /* ---------- Current-year overlay toggle ---------- */
 .overlay-toggle {
+  position: relative;
   display: inline-flex;
   align-items: center;
   gap: 9px;
@@ -924,18 +928,20 @@ body {
   cursor: not-allowed;
 }
 
-/* One consistent "🔒 Pro" pill, placed in normal document flow immediately
-   to the right of each locked control group (not absolutely positioned —
-   that drifted to a different-looking spot on every section depending on
-   that section's own width). */
+/* One consistent "🔒 Pro" pill per locked group, pinned as an overlay on
+   the top-right corner of that group every time — an absolute position
+   relative to a shrink-to-fit container, rather than a flow element whose
+   vertical alignment shifted with each section's own content/wrapping. */
 .pro-badge[hidden] {
   display: none;
 }
 
 .pro-badge {
+  position: absolute;
+  top: -9px;
+  right: -9px;
   display: inline-flex;
   align-items: center;
-  flex: 0 0 auto;
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 0.03em;
@@ -946,7 +952,7 @@ body {
   border: 1px solid var(--panel-border);
   white-space: nowrap;
   pointer-events: none;
-  margin-left: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
 }
 
 /* ---------- Auth modal ---------- */
