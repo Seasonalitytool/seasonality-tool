@@ -516,24 +516,29 @@ body {
   .symbol-search-row { flex-direction: column; align-items: stretch; }
 }
 
-/* ---------- Controls row (filter + year-range slider) ---------- */
-.controls-row {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 24px;
-  flex-wrap: wrap;
+/* ---------- Filter row (All/Bull/Bear) ---------- */
+.filter-bar-row {
   margin-bottom: 18px;
 }
 
-.controls-row .filter-bar {
+.filter-bar-row .filter-bar {
   margin-bottom: 0;
 }
 
+/* ---------- Year-range slider ---------- */
 .range-slider-wrap {
   flex: 1 1 240px;
   max-width: 360px;
   min-width: 200px;
+}
+
+/* Spans the full panel width — same width as the chart below it — instead
+   of sharing a row with the filter buttons. */
+.range-slider-wrap-full {
+  max-width: none;
+  min-width: 0;
+  width: 100%;
+  margin-bottom: 22px;
 }
 
 .range-slider-label {
@@ -871,7 +876,6 @@ body {
   .chart-wrap { height: 360px; }
   .stat-pill { align-items: flex-start; }
   .panel-header { flex-direction: column; }
-  .controls-row { flex-direction: column; align-items: stretch; }
   .range-slider-wrap { max-width: none; }
   .panel-sub { font-size: 12px; }
 }

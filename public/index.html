@@ -71,24 +71,11 @@
         <div class="symbol-search-msg" id="symbolSearchMsg" hidden></div>
         <div class="symbol-legend" id="symbolLegend" hidden></div>
 
-        <div class="controls-row">
+        <div class="filter-bar-row">
           <div class="filter-bar" role="group" aria-label="Year filter" id="filterBar">
             <button class="filter-btn is-active" type="button" data-filter="all">All years</button>
             <button class="filter-btn" type="button" data-filter="bull">Bull years</button>
             <button class="filter-btn" type="button" data-filter="bear">Bear years</button>
-          </div>
-
-          <div class="range-slider-wrap">
-            <div class="range-slider-label">
-              <span>Year range</span>
-              <span id="rangeLabel">—</span>
-            </div>
-            <div class="range-slider" id="rangeSlider">
-              <div class="range-track"></div>
-              <div class="range-fill" id="rangeFill"></div>
-              <input type="range" id="rangeMin" class="range-input range-input-min" step="1" />
-              <input type="range" id="rangeMax" class="range-input range-input-max" step="1" />
-            </div>
           </div>
         </div>
 
@@ -101,6 +88,19 @@
             <button class="filter-btn" type="button" data-cycle="pre">Pre-Election Year</button>
           </div>
           <span class="pro-badge" id="cycleProBadge" hidden>🔒 Pro</span>
+        </div>
+
+        <div class="range-slider-wrap range-slider-wrap-full">
+          <div class="range-slider-label">
+            <span>Year range</span>
+            <span id="rangeLabel">—</span>
+          </div>
+          <div class="range-slider" id="rangeSlider">
+            <div class="range-track"></div>
+            <div class="range-fill" id="rangeFill"></div>
+            <input type="range" id="rangeMin" class="range-input range-input-min" step="1" />
+            <input type="range" id="rangeMax" class="range-input range-input-max" step="1" />
+          </div>
         </div>
 
         <div class="era-bar" role="group" aria-label="Historical era presets" id="eraBar"></div>
