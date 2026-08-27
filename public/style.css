@@ -939,7 +939,6 @@ body {
   border: 1px solid var(--panel-border);
   white-space: nowrap;
   pointer-events: none;
-  margin-left: 8px;
 }
 
 /* ---------- Auth modal ---------- */

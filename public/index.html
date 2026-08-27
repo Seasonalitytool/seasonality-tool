@@ -61,12 +61,12 @@
         </div>
 
         <div class="symbol-search-row">
+          <span class="pro-badge" id="searchProBadge" hidden>🔒 Pro</span>
           <div class="symbol-search" id="symbolSearch">
             <input type="text" id="symbolInput" class="symbol-input" placeholder="Search ticker or company to compare (e.g. AAPL, Apple)…" autocomplete="off" spellcheck="false" />
             <div class="symbol-dropdown" id="symbolDropdown" hidden></div>
           </div>
           <button type="button" class="hide-spx-btn" id="hideSpxBtn">Hide S&amp;P 500</button>
-          <span class="pro-badge" id="searchProBadge" hidden>🔒 Pro</span>
         </div>
         <div class="symbol-search-msg" id="symbolSearchMsg" hidden></div>
         <div class="symbol-legend" id="symbolLegend" hidden></div>
@@ -80,6 +80,7 @@
         </div>
 
         <div class="cycle-bar-row">
+          <span class="pro-badge" id="cycleProBadge" hidden>🔒 Pro</span>
           <div class="filter-bar" role="group" aria-label="U.S. presidential election cycle filter" id="cycleBar">
             <button class="filter-btn is-active" type="button" data-cycle="all">Any Year</button>
             <button class="filter-btn" type="button" data-cycle="election">Election Year</button>
@@ -87,7 +88,6 @@
             <button class="filter-btn" type="button" data-cycle="midterm">Midterm Year</button>
             <button class="filter-btn" type="button" data-cycle="pre">Pre-Election Year</button>
           </div>
-          <span class="pro-badge" id="cycleProBadge" hidden>🔒 Pro</span>
         </div>
 
         <div class="range-slider-wrap range-slider-wrap-full">
@@ -106,10 +106,10 @@
         <div class="era-bar" role="group" aria-label="Historical era presets" id="eraBar"></div>
 
         <label class="overlay-toggle" id="overlayToggleWrap" for="overlayToggle" hidden>
+          <span class="pro-badge" id="overlayProBadge" hidden>🔒 Pro</span>
           <input type="checkbox" id="overlayToggle" />
           <span class="overlay-switch" aria-hidden="true"></span>
           <span class="overlay-label" id="overlayLabel">Overlay current year</span>
-          <span class="pro-badge" id="overlayProBadge" hidden>🔒 Pro</span>
         </label>
 
         <div class="chart-wrap">

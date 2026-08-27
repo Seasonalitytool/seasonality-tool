@@ -806,6 +806,15 @@
   }
 
   if (eraBar) {
+    // Added first so it always sits in the same leftmost spot regardless of
+    // how many era buttons follow it or how they wrap to a second line.
+    eraProBadgeEl = document.createElement("span");
+    eraProBadgeEl.className = "pro-badge";
+    eraProBadgeEl.id = "eraProBadge";
+    eraProBadgeEl.textContent = "🔒 Pro";
+    eraProBadgeEl.hidden = isProUnlocked();
+    eraBar.appendChild(eraProBadgeEl);
+
     ERA_DEFS.forEach((era) => {
       const start = Math.max(dataMinYear, era.start);
       const end = Math.min(dataMaxYear, era.end);
@@ -828,13 +837,6 @@
       eraButtons.push(btn);
     });
     syncEraActiveState();
-
-    eraProBadgeEl = document.createElement("span");
-    eraProBadgeEl.className = "pro-badge";
-    eraProBadgeEl.id = "eraProBadge";
-    eraProBadgeEl.textContent = "🔒 Pro";
-    eraProBadgeEl.hidden = isProUnlocked();
-    eraBar.appendChild(eraProBadgeEl);
   }
 
   // ---- Current-year overlay toggle -------------------------------------------
