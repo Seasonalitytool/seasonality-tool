@@ -5,7 +5,8 @@ computed across historical years, with Bull/Bear filtering and a year-range
 slider.
 
 **Free**: S&P 500 chart, year-range slider, Bull/Bear years filter, era
-presets, and the current-year overlay.
+presets, the current-year overlay, and Sector Rotation (RRG) — temporarily
+free, see `isProUnlocked()` in `public/sector-rotation.js` to re-gate it.
 **Pro**: election-cycle filter (Election/Post-Election/Midterm/Pre-Election
 year) and multi-symbol comparison (search any US ticker and add it to the
 chart).

@@ -499,8 +499,11 @@
   }
 
   // ---- Tab switching + Pro gating --------------------------------------------
+  // Sector Rotation is free for now (temporarily un-gated) — flip this back
+  // to `!!(window.SeasonalityAuth && window.SeasonalityAuth.isPro())` to
+  // make it Pro-only again.
   function isProUnlocked() {
-    return !!(window.SeasonalityAuth && window.SeasonalityAuth.isPro());
+    return true;
   }
 
   function activate() {
