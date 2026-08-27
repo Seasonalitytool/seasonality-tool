@@ -157,7 +157,10 @@
           </div>
         </div>
         <div class="symbol-search-msg" id="rrgSearchMsg" hidden></div>
-        <div class="symbol-legend" id="rrgLegend"></div>
+        <div class="rrg-toolbar">
+          <div class="symbol-legend" id="rrgLegend"></div>
+          <button type="button" class="hide-spx-btn rrg-reset-zoom-btn" id="rrgResetZoomBtn">Reset zoom</button>
+        </div>
 
         <div class="chart-wrap rrg-chart-wrap">
           <canvas id="rrgChart"></canvas>
@@ -170,6 +173,7 @@
             </div>
           </div>
         </div>
+        <p class="rrg-zoom-hint">Scroll to zoom · drag to pan · double-click or "Reset zoom" to return to the full view</p>
 
         <div class="panel-footer">
           <span id="rrgFooterNote">Loading sector data…</span>
@@ -214,6 +218,8 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8/hammer.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
   <script src="supabase-config.js"></script>
   <script src="api-config.js"></script>

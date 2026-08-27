@@ -310,20 +310,21 @@
         pointBorderWidth: 2,
       }));
 
-    const range = computeAxisRange();
-
     if (chart) {
+      // Deliberately NOT touching x/y min/max here — the user may have
+      // zoomed or panned, and refreshing the axis range on every data
+      // update (adding a symbol, switching timeframe) would silently
+      // discard that. "Reset zoom" / double-click exists for going back to
+      // the auto-fit view.
       chart.data.datasets = datasets;
-      chart.options.scales.x.min = range.min;
-      chart.options.scales.x.max = range.max;
-      chart.options.scales.y.min = range.min;
-      chart.options.scales.y.max = range.max;
       chart.options.scales.x.ticks.color = cssVar("--chart-tick");
       chart.options.scales.y.ticks.color = cssVar("--chart-tick");
       chart.options.scales.x.grid.color = cssVar("--chart-grid");
       chart.options.scales.y.grid.color = cssVar("--chart-grid");
       chart.update();
     } else {
+      const range = computeAxisRange(); // only used for the initial auto-fit view
+
       chart = new Chart(ctx, {
         type: "line",
         data: { datasets },
@@ -363,6 +364,16 @@
                 title: (items) => (items[0] ? items[0].dataset.label : ""),
                 label: (item) => `RS-Ratio: ${item.parsed.x.toFixed(2)} · RS-Momentum: ${item.parsed.y.toFixed(2)}`,
               },
+            },
+            zoom: {
+              pan: { enabled: true, mode: "xy" },
+              zoom: {
+                wheel: { enabled: true },
+                pinch: { enabled: true },
+                drag: { enabled: false },
+                mode: "xy",
+              },
+              limits: { x: { min: 50, max: 150 }, y: { min: 50, max: 150 } },
             },
           },
         },
@@ -616,6 +627,20 @@
       currentTimeframe = tf;
       timeframeBar.querySelectorAll(".filter-btn").forEach((b) => b.classList.toggle("is-active", b === btn));
       if (initialized) buildChart();
+    });
+  }
+
+  // ---- Zoom / pan controls ---------------------------------------------------
+  const resetZoomBtn = document.getElementById("rrgResetZoomBtn");
+  if (resetZoomBtn) {
+    resetZoomBtn.addEventListener("click", () => {
+      if (chart) chart.resetZoom();
+    });
+  }
+  const rrgCanvas = document.getElementById("rrgChart");
+  if (rrgCanvas) {
+    rrgCanvas.addEventListener("dblclick", () => {
+      if (chart) chart.resetZoom();
     });
   }
 
