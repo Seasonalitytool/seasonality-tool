@@ -75,8 +75,8 @@
   }
 
   // ---- Pro gating ---------------------------------------------------------------
-  // Free: S&P 500 chart, year-range slider, Bull/Bear filter.
-  // Pro: election-cycle filter, era presets, current-year overlay, multi-symbol
+  // Free: S&P 500 chart, year-range slider, Bull/Bear filter, era presets,
+  // current-year overlay. Pro: election-cycle filter, multi-symbol
   // comparison. Defaults to locked until auth.js confirms a Pro session.
   function isProUnlocked() {
     return !!(window.SeasonalityAuth && window.SeasonalityAuth.isPro());
@@ -84,27 +84,21 @@
 
   function updateLockedUI() {
     const unlocked = isProUnlocked();
-    [cycleBarRowEl, eraBarEl, overlayWrapEl, symbolSearchRowEl, symbolLegendEl].forEach((el) => {
+    [cycleBarRowEl, symbolSearchRowEl, symbolLegendEl].forEach((el) => {
       if (el) el.classList.toggle("is-locked", !unlocked);
     });
-    // One "🔒 Pro" badge per locked section, always in the same spot —
-    // immediately to the right of that section's own controls — instead of
-    // a CSS-generated badge that landed in a different-looking place on
-    // every section depending on that section's own width.
-    [cycleProBadgeEl, eraProBadgeEl, overlayProBadgeEl, searchProBadgeEl].forEach((el) => {
+    // One "🔒 Pro" badge per locked section, pinned to that section's own
+    // top-right corner.
+    [cycleProBadgeEl, searchProBadgeEl].forEach((el) => {
       if (el) el.hidden = unlocked;
     });
   }
 
   const cycleBarRowEl = document.querySelector(".cycle-bar-row");
-  const eraBarEl = document.getElementById("eraBar");
-  const overlayWrapEl = document.getElementById("overlayToggleWrap");
   const symbolSearchRowEl = document.querySelector(".symbol-search-row");
   const symbolLegendEl = document.getElementById("symbolLegend");
   const cycleProBadgeEl = document.getElementById("cycleProBadge");
-  const overlayProBadgeEl = document.getElementById("overlayProBadge");
   const searchProBadgeEl = document.getElementById("searchProBadge");
-  let eraProBadgeEl = null; // created once era-bar's buttons exist, see below
 
   if (window.SeasonalityAuth) {
     window.SeasonalityAuth.onChange(updateLockedUI);
@@ -817,24 +811,11 @@
       btn.textContent = era.label;
       btn.dataset.start = start;
       btn.dataset.end = end;
-      btn.addEventListener("click", () => {
-        if (!isProUnlocked()) {
-          window.SeasonalityAuth && window.SeasonalityAuth.promptUpgrade("Era presets are a Pro feature.");
-          return;
-        }
-        applyRange(start, end);
-      });
+      btn.addEventListener("click", () => applyRange(start, end));
       eraBar.appendChild(btn);
       eraButtons.push(btn);
     });
     syncEraActiveState();
-
-    eraProBadgeEl = document.createElement("span");
-    eraProBadgeEl.className = "pro-badge";
-    eraProBadgeEl.id = "eraProBadge";
-    eraProBadgeEl.textContent = "🔒 Pro";
-    eraProBadgeEl.hidden = isProUnlocked();
-    eraBar.appendChild(eraProBadgeEl);
   }
 
   // ---- Current-year overlay toggle -------------------------------------------
@@ -847,11 +828,6 @@
     overlayWrap.hidden = false;
 
     overlayCheckbox.addEventListener("change", () => {
-      if (!isProUnlocked()) {
-        overlayCheckbox.checked = false;
-        window.SeasonalityAuth && window.SeasonalityAuth.promptUpgrade("The current-year overlay is a Pro feature.");
-        return;
-      }
       overlayEnabled = overlayCheckbox.checked;
       chart.setDatasetVisibility(1, overlayEnabled);
       chart.update();

@@ -4,10 +4,11 @@ A seasonal S&P 500 chart: the average cumulative % return by calendar day,
 computed across historical years, with Bull/Bear filtering and a year-range
 slider.
 
-**Free**: S&P 500 chart, year-range slider, Bull/Bear years filter.
-**Pro (coming soon)**: election-cycle filter (Election/Post-Election/Midterm/
-Pre-Election year), era presets, current-year overlay, and multi-symbol
-comparison (search any US ticker and add it to the chart).
+**Free**: S&P 500 chart, year-range slider, Bull/Bear years filter, era
+presets, and the current-year overlay.
+**Pro**: election-cycle filter (Election/Post-Election/Midterm/Pre-Election
+year) and multi-symbol comparison (search any US ticker and add it to the
+chart).
 
 ## Running locally
 

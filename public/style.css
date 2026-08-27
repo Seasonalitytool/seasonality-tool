@@ -938,8 +938,8 @@ body {
 
 .pro-badge {
   position: absolute;
-  top: -9px;
-  right: -9px;
+  top: -15px;
+  right: -6px;
   display: inline-flex;
   align-items: center;
   font-size: 10px;
