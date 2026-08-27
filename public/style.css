@@ -651,6 +651,11 @@ body {
   gap: 12px;
   flex-wrap: wrap;
   margin-bottom: 18px;
+  /* Shrink to fit the buttons instead of stretching across the whole panel
+     — otherwise the trailing Pro badge ends up far from the actual buttons
+     on wide screens. */
+  width: fit-content;
+  max-width: 100%;
 }
 
 #cycleBar {
@@ -677,6 +682,8 @@ body {
   gap: 7px;
   flex-wrap: wrap;
   margin-bottom: 20px;
+  width: fit-content;
+  max-width: 100%;
 }
 
 .era-btn {
@@ -939,6 +946,7 @@ body {
   border: 1px solid var(--panel-border);
   white-space: nowrap;
   pointer-events: none;
+  margin-left: 8px;
 }
 
 /* ---------- Auth modal ---------- */
