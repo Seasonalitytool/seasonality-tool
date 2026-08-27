@@ -540,6 +540,11 @@ body {
   color: var(--text-secondary);
 }
 
+.legend-sector-name {
+  color: var(--text-tertiary);
+  font-size: 11px;
+}
+
 .legend-remove {
   appearance: none;
   border: none;

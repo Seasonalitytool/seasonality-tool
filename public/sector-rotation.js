@@ -348,6 +348,13 @@
       label.textContent = s.symbol;
       chip.appendChild(label);
 
+      if (s.name) {
+        const name = document.createElement("span");
+        name.className = "legend-sector-name";
+        name.textContent = s.name;
+        chip.appendChild(name);
+      }
+
       const value = document.createElement("span");
       value.className = "legend-value";
       const last = s.tail && s.tail[s.tail.length - 1];
