@@ -47,8 +47,18 @@
       </div>
     </header>
 
+    <nav class="page-tabs-row">
+      <div class="page-tabs" role="tablist" aria-label="Views">
+        <button class="page-tab is-active" type="button" data-view="seasonality" role="tab" aria-selected="true">Seasonality</button>
+        <button class="page-tab" type="button" data-view="sector-rotation" role="tab" aria-selected="false">
+          Sector Rotation
+          <span class="pro-badge pro-badge-inline" id="rrgTabProBadge">🔒 Pro</span>
+        </button>
+      </div>
+    </nav>
+
     <main class="content">
-      <section class="panel">
+      <section class="panel" id="seasonalityView">
         <div class="panel-header">
           <div>
             <h1>S&amp;P&nbsp;500 Seasonal Pattern</h1>
@@ -123,6 +133,40 @@
           <span id="footerNote">Loading historical data…</span>
         </div>
       </section>
+
+      <section class="panel" id="sectorRotationView" hidden>
+        <div class="panel-header">
+          <div>
+            <h1>Sector Rotation <span class="rrg-title-sub">(RRG)</span></h1>
+            <p class="panel-sub">JdK RS-Ratio vs. RS-Momentum for the 11 S&amp;P 500 sector ETFs, benchmarked against the S&amp;P 500.</p>
+          </div>
+        </div>
+
+        <div class="symbol-search-row">
+          <div class="symbol-search" id="rrgSymbolSearch">
+            <input type="text" id="rrgSymbolInput" class="symbol-input" placeholder="Add a custom ticker to compare (e.g. AAPL, Apple)…" autocomplete="off" spellcheck="false" />
+            <div class="symbol-dropdown" id="rrgSymbolDropdown" hidden></div>
+          </div>
+        </div>
+        <div class="symbol-search-msg" id="rrgSearchMsg" hidden></div>
+        <div class="symbol-legend" id="rrgLegend"></div>
+
+        <div class="chart-wrap rrg-chart-wrap">
+          <canvas id="rrgChart"></canvas>
+          <div class="rrg-lock-overlay" id="rrgLockOverlay" hidden>
+            <div class="rrg-lock-box">
+              <div class="rrg-lock-icon">🔒</div>
+              <h3>Sector Rotation is a Pro feature</h3>
+              <p>Sign in and upgrade to see live sector rotation for all 11 S&amp;P 500 sectors, plus any ticker you add.</p>
+              <button type="button" class="modal-btn modal-btn-primary" id="rrgUpgradeBtn">Upgrade to Pro</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel-footer">
+          <span id="rrgFooterNote">Loading sector data…</span>
+        </div>
+      </section>
     </main>
 
     <footer class="app-footer">
@@ -134,7 +178,7 @@
     <div class="modal" id="authModal" role="dialog" aria-modal="true" aria-labelledby="authModalTitle">
       <button type="button" class="modal-close" id="authModalClose" aria-label="Close">×</button>
       <h2 id="authModalTitle">Sign in</h2>
-      <p class="modal-sub" id="authModalSub">Election-cycle filters, era presets, the current-year overlay, and multi-symbol comparison are Pro features.</p>
+      <p class="modal-sub" id="authModalSub">The election-cycle filter, multi-symbol comparison, and Sector Rotation are Pro features.</p>
 
       <form id="authForm">
         <label class="modal-field">
@@ -169,5 +213,6 @@
   <script src="tickers.js"></script>
   <script src="auth.js"></script>
   <script src="app.js"></script>
+  <script src="sector-rotation.js"></script>
 </body>
 </html>

@@ -122,6 +122,45 @@ function Get-SeasonalHistory {
     }
 }
 
+# Raw trailing daily closes for a symbol — used by the Sector Rotation (RRG)
+# view, which needs an actual price time series rather than the per-calendar
+# -day seasonal composite Get-SeasonalHistory produces. Mirrors api/prices.js.
+function Get-DailyPrices {
+    param([string]$Symbol, [int]$Days = 300)
+
+    $encoded = [uri]::EscapeDataString($Symbol)
+    $period1 = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds() - ([Math]::Ceiling($Days * 1.6) * 86400)
+    $url = "https://query1.finance.yahoo.com/v8/finance/chart/$encoded`?period1=$period1&period2=9999999999&interval=1d"
+    $resp = Invoke-RestMethod -Uri $url -Headers $headers -TimeoutSec 30
+    $result = $resp.chart.result[0]
+    if (-not $result -or -not $result.timestamp -or $result.timestamp.Count -eq 0) {
+        throw "No data returned for symbol '$Symbol'."
+    }
+
+    $tz = [System.TimeZoneInfo]::FindSystemTimeZoneById("Eastern Standard Time")
+    $closes = $result.indicators.quote[0].close
+    $byDate = @{}
+    for ($i = 0; $i -lt $result.timestamp.Count; $i++) {
+        $c = $closes[$i]
+        if ($null -eq $c) { continue }
+        $utc = [DateTimeOffset]::FromUnixTimeSeconds([int64]$result.timestamp[$i]).UtcDateTime
+        $local = [System.TimeZoneInfo]::ConvertTimeFromUtc($utc, $tz)
+        $byDate[$local.ToString("yyyy-MM-dd")] = [double]$c
+    }
+    $sortedDates = $byDate.Keys | Sort-Object
+    if (-not $sortedDates -or $sortedDates.Count -eq 0) { throw "No usable daily closes for symbol '$Symbol'." }
+
+    $trimmed = $sortedDates | Select-Object -Last $Days
+    $closesOut = New-Object System.Collections.Generic.List[object]
+    foreach ($d in $trimmed) { $closesOut.Add($byDate[$d]) }
+
+    [PSCustomObject]@{
+        symbol = $Symbol.ToUpper()
+        dates  = @($trimmed)
+        closes = $closesOut
+    }
+}
+
 while ($listener.IsListening) {
     $context = $listener.GetContext()
     $req = $context.Request
@@ -138,6 +177,33 @@ while ($listener.IsListening) {
             } else {
                 try {
                     $data = Get-SeasonalHistory -Symbol $sym.Trim()
+                    $json = $data | ConvertTo-Json -Depth 6 -Compress
+                    $body = [Text.Encoding]::UTF8.GetBytes($json)
+                } catch {
+                    $res.StatusCode = 502
+                    $errMsg = ($_.Exception.Message -replace '"', "'")
+                    $body = [Text.Encoding]::UTF8.GetBytes("{`"error`":`"$errMsg`"}")
+                }
+            }
+            $res.ContentLength64 = $body.Length
+            $res.OutputStream.Write($body, 0, $body.Length)
+            $res.OutputStream.Close()
+            continue
+        }
+
+        if ($path -eq "/api/prices") {
+            $sym = $req.QueryString["symbol"]
+            $daysParam = $req.QueryString["days"]
+            $days = 300
+            if ($daysParam) { [int]::TryParse($daysParam, [ref]$days) | Out-Null }
+            $days = [Math]::Min(500, [Math]::Max(60, $days))
+            $res.ContentType = "application/json; charset=utf-8"
+            if (-not $sym -or $sym.Trim() -eq "") {
+                $res.StatusCode = 400
+                $body = [Text.Encoding]::UTF8.GetBytes('{"error":"missing symbol"}')
+            } else {
+                try {
+                    $data = Get-DailyPrices -Symbol $sym.Trim() -Days $days
                     $json = $data | ConvertTo-Json -Depth 6 -Compress
                     $body = [Text.Encoding]::UTF8.GetBytes($json)
                 } catch {
