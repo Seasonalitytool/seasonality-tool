@@ -725,6 +725,22 @@
     rangeFill.style.left = leftPct + "%";
     rangeFill.style.right = rightPct + "%";
     rangeLabel.textContent = `${rangeMin}–${rangeMax}`;
+
+    // The two <input type="range"> thumbs sit on top of each other when
+    // dragged to the same value (e.g. both pushed to the far edge) — without
+    // this, whichever one is on top in the DOM permanently wins every click
+    // there, trapping the other thumb underneath with no way to grab it
+    // again. Give whichever thumb is on the "far" side of the midpoint the
+    // higher z-index, since that's the one more likely to need picking back
+    // up out of a collision.
+    const midpoint = (dataMinYear + dataMaxYear) / 2;
+    if (rangeMin > midpoint) {
+      rangeMinInput.style.zIndex = 3;
+      rangeMaxInput.style.zIndex = 2;
+    } else {
+      rangeMinInput.style.zIndex = 2;
+      rangeMaxInput.style.zIndex = 3;
+    }
   }
 
   // Shared entry point for any range change — manual drag or an era preset —
