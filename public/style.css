@@ -529,6 +529,51 @@ body {
   color: var(--text-tertiary);
 }
 
+.era-btn.rrg-group-btn.is-active {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-color: var(--accent-border);
+}
+
+.era-btn.rrg-new-group-btn {
+  border-style: dashed;
+}
+
+.era-btn.rrg-delete-group-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.rrg-group-delete-x {
+  color: var(--text-tertiary);
+  font-weight: 700;
+}
+
+.rrg-group-delete-x:hover {
+  color: var(--negative);
+}
+
+.rrg-new-group-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 18px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--panel-border);
+  border-radius: 12px;
+}
+
+.rrg-new-group-panel[hidden] {
+  display: none;
+}
+
+.rrg-new-group-actions {
+  display: flex;
+  gap: 10px;
+}
+
 .legend-chip {
   display: inline-flex;
   align-items: center;

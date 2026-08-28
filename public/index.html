@@ -142,6 +142,21 @@
           </div>
         </div>
 
+        <div class="era-bar" id="rrgGroupBar" role="group" aria-label="Ticker group"></div>
+
+        <div class="rrg-new-group-panel" id="rrgNewGroupPanel" hidden>
+          <input type="text" id="rrgNewGroupName" class="symbol-input" placeholder="Group name (e.g. My Watchlist)" autocomplete="off" />
+          <div class="symbol-search" id="rrgNewGroupSearch">
+            <input type="text" id="rrgNewGroupSymbolInput" class="symbol-input" placeholder="Add a ticker to this group…" autocomplete="off" spellcheck="false" />
+            <div class="symbol-dropdown" id="rrgNewGroupDropdown" hidden></div>
+          </div>
+          <div class="symbol-legend" id="rrgNewGroupChips"></div>
+          <div class="rrg-new-group-actions">
+            <button type="button" class="modal-btn modal-btn-primary" id="rrgSaveGroupBtn">Save group</button>
+            <button type="button" class="modal-btn" id="rrgCancelGroupBtn">Cancel</button>
+          </div>
+        </div>
+
         <div class="filter-bar-row">
           <div class="filter-bar" role="group" aria-label="Timeframe" id="rrgTimeframeBar">
             <button class="filter-btn is-active" type="button" data-timeframe="daily">Daily</button>

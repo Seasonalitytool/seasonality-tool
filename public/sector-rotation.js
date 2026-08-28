@@ -43,7 +43,44 @@
     "#3b82f6", "#f59e0b", "#a855f7", "#ec4899", "#06b6d4", "#84cc16",
     "#f97316", "#eab308", "#14b8a6", "#f43f5e", "#22c55e", "#818cf8",
   ];
-  const MAX_LINES = 10;
+  const MAX_LINES = 12;
+
+  // Built-in starting points — the sector view stays the default, plus a
+  // couple of other widely-relevant baskets people commonly want to compare.
+  const DEFAULT_GROUPS = [
+    { id: "sectors", name: "Sectors", builtin: true, symbols: SECTORS.map((s) => s.symbol) },
+    { id: "mag7", name: "Magnificent 7", builtin: true, symbols: ["AAPL", "MSFT", "GOOGL", "AMZN", "NVDA", "META", "TSLA"] },
+    { id: "semis", name: "Semiconductors", builtin: true, symbols: ["NVDA", "AMD", "TSM", "AVGO", "INTC", "QCOM", "MU", "ASML"] },
+    { id: "banks", name: "Big Banks", builtin: true, symbols: ["JPM", "BAC", "WFC", "C", "GS", "MS", "USB", "PNC"] },
+  ];
+  const CUSTOM_GROUPS_KEY = "rrgCustomGroups";
+
+  function loadCustomGroups() {
+    try {
+      const raw = localStorage.getItem(CUSTOM_GROUPS_KEY);
+      const parsed = raw ? JSON.parse(raw) : [];
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function saveCustomGroups() {
+    try {
+      localStorage.setItem(CUSTOM_GROUPS_KEY, JSON.stringify(customGroups));
+    } catch (e) {}
+  }
+
+  let customGroups = loadCustomGroups(); // [{id, name, builtin:false, symbols:[...]}]
+  let activeGroupId = "sectors";
+
+  function allGroups() {
+    return DEFAULT_GROUPS.concat(customGroups);
+  }
+
+  function getGroupById(id) {
+    return allGroups().find((g) => g.id === id) || DEFAULT_GROUPS[0];
+  }
 
   // RS-Ratio / RS-Momentum tuning. The exact JdK formula is proprietary and
   // unpublished; this is a standard, widely-used approximation (relative
@@ -176,6 +213,16 @@
     const json = await res.json().catch(() => ({}));
     if (!res.ok || json.error) throw new Error(json.error || `HTTP ${res.status}`);
     return json;
+  }
+
+  // Same-session cache so switching between groups (or back to one you were
+  // just on) doesn't re-fetch a symbol that's already loaded.
+  const priceCache = new Map();
+  async function fetchPricesCached(symbol) {
+    if (priceCache.has(symbol)) return priceCache.get(symbol);
+    const data = await fetchPrices(symbol);
+    priceCache.set(symbol, data);
+    return data;
   }
 
   function setFooter(text) {
@@ -454,31 +501,91 @@
   }
 
   // ---- Load / add / remove --------------------------------------------------
-  async function loadAndRender() {
-    setFooter("Loading sector data…");
+  async function loadGroup(group) {
+    activeGroupId = group.id;
+    renderGroupBar();
+    setFooter(`Loading ${group.name}…`);
     try {
-      benchmark = await fetchPrices(BENCHMARK_SYMBOL);
-      const results = await Promise.allSettled(SECTORS.map((s) => fetchPrices(s.symbol)));
+      benchmark = await fetchPricesCached(BENCHMARK_SYMBOL);
+      const results = await Promise.allSettled(group.symbols.map((sym) => fetchPricesCached(sym)));
       series = [];
       results.forEach((r, i) => {
+        const sym = group.symbols[i];
         if (r.status !== "fulfilled") {
-          console.warn("Sector fetch failed:", SECTORS[i].symbol, r.reason);
+          console.warn("Fetch failed:", sym, r.reason);
           return;
         }
+        // The "Sectors" group carries hand-picked sector names (XLK isn't in
+        // the ETF-free ticker list, so tickerNameFor() can't resolve it) —
+        // every other group's members are regular stocks, resolved normally.
+        const sectorDef = group.id === "sectors" ? SECTORS[i] : null;
         series.push({
           symbol: r.value.symbol,
-          name: SECTORS[i].name,
+          name: sectorDef ? sectorDef.name : tickerNameFor(sym),
           dates: r.value.dates,
           closes: r.value.closes,
           color: PALETTE[i % PALETTE.length],
-          removable: false,
+          removable: true,
           visible: true,
         });
       });
-      if (!series.length) throw new Error("no sector data available");
-      buildChart(); // also sets the footer text with the loaded sector count
+      if (!series.length) throw new Error("no data available for this group");
+      buildChart(); // also sets the footer text with the loaded count
     } catch (err) {
-      setFooter(`Couldn't load sector data (${(err && err.message) || err}).`);
+      setFooter(`Couldn't load ${group.name} (${(err && err.message) || err}).`);
+    }
+  }
+
+  function renderGroupBar() {
+    const bar = document.getElementById("rrgGroupBar");
+    if (!bar) return;
+    bar.innerHTML = "";
+
+    allGroups().forEach((g) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "era-btn rrg-group-btn" + (g.builtin ? "" : " rrg-delete-group-btn");
+      btn.classList.toggle("is-active", g.id === activeGroupId);
+
+      if (g.builtin) {
+        btn.textContent = g.name;
+        btn.addEventListener("click", () => loadGroup(g));
+      } else {
+        const label = document.createElement("span");
+        label.textContent = g.name;
+        btn.appendChild(label);
+        const del = document.createElement("span");
+        del.className = "rrg-group-delete-x";
+        del.textContent = "×";
+        del.setAttribute("aria-label", `Delete group ${g.name}`);
+        del.addEventListener("click", (e) => {
+          e.stopPropagation();
+          deleteCustomGroup(g.id);
+        });
+        btn.appendChild(del);
+        btn.addEventListener("click", (e) => {
+          if (e.target === del) return;
+          loadGroup(g);
+        });
+      }
+      bar.appendChild(btn);
+    });
+
+    const newBtn = document.createElement("button");
+    newBtn.type = "button";
+    newBtn.className = "era-btn rrg-new-group-btn";
+    newBtn.textContent = "+ New Group";
+    newBtn.addEventListener("click", openNewGroupPanel);
+    bar.appendChild(newBtn);
+  }
+
+  function deleteCustomGroup(id) {
+    customGroups = customGroups.filter((g) => g.id !== id);
+    saveCustomGroups();
+    if (activeGroupId === id) {
+      loadGroup(DEFAULT_GROUPS[0]);
+    } else {
+      renderGroupBar();
     }
   }
 
@@ -582,6 +689,129 @@
     });
   }
 
+  // ---- Create-a-group panel ---------------------------------------------------
+  let pendingGroupSymbols = [];
+
+  function openNewGroupPanel() {
+    pendingGroupSymbols = [];
+    renderPendingChips();
+    const panel = document.getElementById("rrgNewGroupPanel");
+    const nameInput = document.getElementById("rrgNewGroupName");
+    if (nameInput) nameInput.value = "";
+    if (panel) panel.hidden = false;
+    if (nameInput) nameInput.focus();
+  }
+
+  function closeNewGroupPanel() {
+    const panel = document.getElementById("rrgNewGroupPanel");
+    if (panel) panel.hidden = true;
+    pendingGroupSymbols = [];
+  }
+
+  function renderPendingChips() {
+    const chipsEl = document.getElementById("rrgNewGroupChips");
+    if (!chipsEl) return;
+    chipsEl.innerHTML = "";
+    pendingGroupSymbols.forEach((sym) => {
+      const chip = document.createElement("span");
+      chip.className = "legend-chip";
+      const label = document.createElement("span");
+      label.className = "legend-label";
+      label.textContent = sym;
+      chip.appendChild(label);
+      const remove = document.createElement("button");
+      remove.type = "button";
+      remove.className = "legend-remove";
+      remove.setAttribute("aria-label", `Remove ${sym}`);
+      remove.textContent = "×";
+      remove.addEventListener("click", () => {
+        pendingGroupSymbols = pendingGroupSymbols.filter((s) => s !== sym);
+        renderPendingChips();
+      });
+      chip.appendChild(remove);
+      chipsEl.appendChild(chip);
+    });
+  }
+
+  function setupNewGroupPanel() {
+    const input = document.getElementById("rrgNewGroupSymbolInput");
+    const dropdown = document.getElementById("rrgNewGroupDropdown");
+    const saveBtn = document.getElementById("rrgSaveGroupBtn");
+    const cancelBtn = document.getElementById("rrgCancelGroupBtn");
+    if (!input || !dropdown) return;
+
+    function closeDropdown() {
+      dropdown.hidden = true;
+      dropdown.innerHTML = "";
+    }
+
+    function renderDropdown(results) {
+      dropdown.innerHTML = "";
+      if (!results.length) {
+        closeDropdown();
+        return;
+      }
+      results.forEach((t) => {
+        const item = document.createElement("button");
+        item.type = "button";
+        item.className = "symbol-option";
+        const ticker = document.createElement("span");
+        ticker.className = "symbol-option-ticker";
+        ticker.textContent = t.s;
+        const name = document.createElement("span");
+        name.className = "symbol-option-name";
+        name.textContent = t.n;
+        item.appendChild(ticker);
+        item.appendChild(name);
+        item.addEventListener("mousedown", (e) => {
+          e.preventDefault();
+          if (!pendingGroupSymbols.includes(t.s)) {
+            if (pendingGroupSymbols.length >= MAX_LINES) {
+              flashMsg(`A group can hold up to ${MAX_LINES} tickers.`);
+            } else {
+              pendingGroupSymbols.push(t.s);
+              renderPendingChips();
+            }
+          }
+          input.value = "";
+          closeDropdown();
+        });
+        dropdown.appendChild(item);
+      });
+      dropdown.hidden = false;
+    }
+
+    input.addEventListener("input", () => renderDropdown(searchTickers(input.value)));
+    input.addEventListener("focus", () => {
+      if (input.value.trim()) renderDropdown(searchTickers(input.value));
+    });
+    input.addEventListener("blur", () => setTimeout(closeDropdown, 120));
+
+    if (saveBtn) {
+      saveBtn.addEventListener("click", () => {
+        const nameInput = document.getElementById("rrgNewGroupName");
+        const name = nameInput ? nameInput.value.trim() : "";
+        if (!name) {
+          flashMsg("Give the group a name first.");
+          return;
+        }
+        if (!pendingGroupSymbols.length) {
+          flashMsg("Add at least one ticker to the group.");
+          return;
+        }
+        const id = "custom-" + Date.now();
+        const group = { id, name, builtin: false, symbols: pendingGroupSymbols.slice() };
+        customGroups.push(group);
+        saveCustomGroups();
+        closeNewGroupPanel();
+        loadGroup(group);
+      });
+    }
+    if (cancelBtn) {
+      cancelBtn.addEventListener("click", closeNewGroupPanel);
+    }
+  }
+
   // ---- Tab switching + Pro gating --------------------------------------------
   // Sector Rotation is free for now (temporarily un-gated) — flip this back
   // to `!!(window.SeasonalityAuth && window.SeasonalityAuth.isPro())` to
@@ -597,7 +827,8 @@
     if (!unlocked) return;
     if (initialized) return;
     initialized = true;
-    loadAndRender();
+    renderGroupBar();
+    loadGroup(getGroupById(activeGroupId));
   }
 
   function currentView() {
@@ -664,6 +895,7 @@
   }
 
   setupSearch();
+  setupNewGroupPanel();
 
   // Sync the tab's badge/lock state immediately on load, not just on the
   // next auth change (covers a returning user whose session restores
