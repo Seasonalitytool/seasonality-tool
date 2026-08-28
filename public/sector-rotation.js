@@ -298,6 +298,7 @@
       .map((s) => ({
         label: s.symbol,
         data: s.tail,
+        hidden: s.visible === false,
         borderColor: s.color,
         backgroundColor: s.color,
         showLine: true,
@@ -397,8 +398,14 @@
     legendEl.innerHTML = "";
     series.forEach((s) => {
       const chip = document.createElement("span");
-      chip.className = "legend-chip";
+      chip.className = "legend-chip legend-chip-toggle";
+      chip.classList.toggle("is-hidden", s.visible === false);
       chip.style.setProperty("--chip-color", s.color);
+      chip.title = s.visible === false ? `Click to show ${s.symbol}` : `Click to hide ${s.symbol}`;
+      chip.addEventListener("click", () => {
+        s.visible = s.visible === false ? true : false;
+        buildChart();
+      });
 
       const dot = document.createElement("span");
       dot.className = "legend-dot";
@@ -428,7 +435,10 @@
         remove.className = "legend-remove";
         remove.setAttribute("aria-label", `Remove ${s.symbol}`);
         remove.textContent = "×";
-        remove.addEventListener("click", () => removeSymbol(s.symbol));
+        remove.addEventListener("click", (e) => {
+          e.stopPropagation();
+          removeSymbol(s.symbol);
+        });
         chip.appendChild(remove);
       }
 
@@ -455,6 +465,7 @@
           closes: r.value.closes,
           color: PALETTE[i % PALETTE.length],
           removable: false,
+          visible: true,
         });
       });
       if (!series.length) throw new Error("no sector data available");
@@ -490,6 +501,7 @@
         closes: data.closes,
         color: PALETTE[series.length % PALETTE.length],
         removable: true,
+        visible: true,
       });
       buildChart();
     } catch (err) {

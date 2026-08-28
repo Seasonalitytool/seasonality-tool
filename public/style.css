@@ -541,6 +541,24 @@ body {
   font-size: 12px;
 }
 
+.legend-chip-toggle {
+  cursor: pointer;
+  transition: opacity 0.15s ease, border-color 0.15s ease;
+  user-select: none;
+}
+
+.legend-chip-toggle:hover {
+  border-color: var(--accent-border);
+}
+
+.legend-chip-toggle.is-hidden {
+  opacity: 0.4;
+}
+
+.legend-chip-toggle.is-hidden .legend-dot {
+  background: var(--text-tertiary);
+}
+
 :root[data-theme="light"] .legend-chip {
   background: rgba(0, 0, 0, 0.02);
 }
