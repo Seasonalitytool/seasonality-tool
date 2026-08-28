@@ -943,14 +943,14 @@
       });
 
     const startTime = performance.now();
-    function easeInOut(t) {
-      return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
-    }
-
+    // Linear, not eased — easing decelerates to a full stop at the end of
+    // every single step and re-accelerates from zero for the next one,
+    // which reads as the motion visibly pausing at each point. Constant
+    // speed within each step makes consecutive steps blend into one
+    // continuous glide instead.
     function tick(now) {
       if (!isPlaying) return;
-      const t = Math.min(1, (now - startTime) / GLIDE_MS);
-      const e = easeInOut(t);
+      const e = Math.min(1, (now - startTime) / GLIDE_MS);
       frames.forEach(({ s, from, to, settled }) => {
         const hx = from.x + (to.x - from.x) * e;
         const hy = from.y + (to.y - from.y) * e;
@@ -959,7 +959,7 @@
       renderChartDatasets("none"); // no built-in animation — we're driving it ourselves
       updatePlayDate(active, playIndex + e);
 
-      if (t < 1) {
+      if (e < 1) {
         playAnimHandle = requestAnimationFrame(tick);
       } else {
         playIndex = nextIndex;
