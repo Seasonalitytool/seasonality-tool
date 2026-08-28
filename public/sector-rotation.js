@@ -323,6 +323,13 @@
       chart.options.scales.x.grid.color = cssVar("--chart-grid");
       chart.options.scales.y.grid.color = cssVar("--chart-grid");
       chart.update();
+      // Chart.js only reads a dataset's `hidden` flag the first time it
+      // creates that dataset's internal meta — reassigning chart.data.datasets
+      // above does NOT re-apply it on later updates (toggling a legend chip,
+      // adding a symbol, etc.), so visibility has to be set explicitly here
+      // every time instead.
+      datasets.forEach((ds, i) => chart.setDatasetVisibility(i, !ds.hidden));
+      chart.update();
     } else {
       const range = computeAxisRange(); // only used for the initial auto-fit view
 
