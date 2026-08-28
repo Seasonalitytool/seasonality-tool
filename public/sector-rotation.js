@@ -101,6 +101,19 @@
   const FETCH_DAYS = 1500;
   let currentTimeframe = "daily";
 
+  // Quick "jump to range and play" buttons — expressed in trading days, then
+  // converted to a bar count for whatever timeframe is active (a weekly bar
+  // covers ~5 trading days, monthly ~21), so "Last Month" means the same
+  // real-world span regardless of granularity.
+  const TRADING_DAYS_PER_BAR = { daily: 1, weekly: 5, monthly: 21 };
+  const QUICK_RANGES = [
+    { id: "5d", label: "Last 5 Days", tradingDays: 5 },
+    { id: "1m", label: "Last Month", tradingDays: 21 },
+    { id: "3m", label: "Last 3 Months", tradingDays: 63 },
+    { id: "1y", label: "Last Year", tradingDays: 252 },
+    { id: "all", label: "All", tradingDays: Infinity },
+  ];
+
   function sma(arr, window) {
     const out = new Array(arr.length).fill(null);
     let sum = 0;
@@ -197,7 +210,11 @@
   let isPlaying = false;
   let playIndex = 0;
   let playAnimHandle = null;
-  const GLIDE_MS = 450; // time to smoothly glide from one point to the next
+  const BASE_GLIDE_MS = 450; // time to glide from one point to the next at 1×
+  let speedMultiplier = 1;
+  function currentGlideMs() {
+    return BASE_GLIDE_MS / speedMultiplier;
+  }
 
   function apiUrl(path) {
     return `${window.API_BASE_URL || ""}${path}`;
@@ -891,6 +908,7 @@
     renderChartDatasets("none");
     renderLegend();
     updatePlayDate(active, idx);
+    updateTimelineSlider(idx);
   }
 
   const timelineSlider = document.getElementById("rrgTimelineSlider");
@@ -955,7 +973,7 @@
     // continuous glide instead.
     function tick(now) {
       if (!isPlaying) return;
-      const e = Math.min(1, (now - startTime) / GLIDE_MS);
+      const e = Math.min(1, (now - startTime) / currentGlideMs());
       frames.forEach(({ s, from, to, settled }) => {
         const hx = from.x + (to.x - from.x) * e;
         const hy = from.y + (to.y - from.y) * e;
@@ -997,6 +1015,30 @@
     playStep();
   }
 
+  // Jumps the scrubber to "N trading days ago" (converted to bars for the
+  // active timeframe) and immediately starts playing forward from there —
+  // so watching a rotation doesn't require sitting through years of
+  // playback first just to reach anything recent.
+  function jumpToRange(range) {
+    const active = playableSeries();
+    const preset = TIMEFRAME_PRESETS[currentTimeframe] || TIMEFRAME_PRESETS.daily;
+    if (!active.length) {
+      flashMsg("Nothing visible to animate — show at least one ticker.");
+      return;
+    }
+    const minLen = Math.min(...active.map((s) => s.allPoints.length));
+    let startIdx;
+    if (range.tradingDays === Infinity) {
+      startIdx = preset.tail - 1;
+    } else {
+      const barsPerTradingDay = 1 / (TRADING_DAYS_PER_BAR[currentTimeframe] || 1);
+      const bars = Math.max(1, Math.round(range.tradingDays * barsPerTradingDay));
+      startIdx = Math.max(preset.tail - 1, minLen - 1 - bars);
+    }
+    seekTo(startIdx);
+    startPlay();
+  }
+
   function stopPlay() {
     if (!isPlaying && !playAnimHandle) return;
     isPlaying = false;
@@ -1012,6 +1054,32 @@
     playBtn.addEventListener("click", () => {
       if (isPlaying) stopPlay();
       else startPlay();
+    });
+  }
+
+  // ---- Quick-range jump buttons ------------------------------------------------
+  const quickRangeBar = document.getElementById("rrgQuickRangeBar");
+  if (quickRangeBar) {
+    QUICK_RANGES.forEach((range) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "era-btn";
+      btn.textContent = range.label;
+      btn.addEventListener("click", () => jumpToRange(range));
+      quickRangeBar.appendChild(btn);
+    });
+  }
+
+  // ---- Playback speed -----------------------------------------------------------
+  const speedBar = document.getElementById("rrgSpeedBar");
+  if (speedBar) {
+    speedBar.addEventListener("click", (e) => {
+      const btn = e.target.closest(".filter-btn");
+      if (!btn) return;
+      const speed = parseFloat(btn.getAttribute("data-speed"));
+      if (!speed || speed === speedMultiplier) return;
+      speedMultiplier = speed;
+      speedBar.querySelectorAll(".filter-btn").forEach((b) => b.classList.toggle("is-active", b === btn));
     });
   }
 

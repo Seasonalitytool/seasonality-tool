@@ -526,11 +526,28 @@ body {
   display: flex;
   align-items: center;
   gap: 14px;
-  margin-bottom: 16px;
+  margin-bottom: 10px;
   padding: 10px 14px;
   background: rgba(255, 255, 255, 0.02);
   border: 1px solid var(--panel-border);
   border-radius: 10px;
+}
+
+.rrg-play-options-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.rrg-quick-range-bar {
+  margin-bottom: 0;
+}
+
+#rrgSpeedBar {
+  margin-bottom: 0;
 }
 
 .rrg-play-btn {
