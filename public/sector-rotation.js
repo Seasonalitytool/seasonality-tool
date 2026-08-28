@@ -92,14 +92,17 @@
   const RATIO_SCALE = 10; // spreads the z-score into a readable ~90-110 band
   const MOMENTUM_SCALE = 3;
   const TIMEFRAME_PRESETS = {
-    daily: { shortSmooth: 10, baseline: 30, momentum: 10, tail: 8 },
-    weekly: { shortSmooth: 4, baseline: 12, momentum: 4, tail: 8 },
-    monthly: { shortSmooth: 2, baseline: 6, momentum: 3, tail: 6 },
+    daily: { shortSmooth: 10, baseline: 30, momentum: 10 },
+    weekly: { shortSmooth: 4, baseline: 12, momentum: 4 },
+    monthly: { shortSmooth: 2, baseline: 6, momentum: 3 },
   };
   // One fetch covers every timeframe (no re-fetching on toggle) — ~1500
   // trading days is ~6 years, comfortably enough for monthly's windows too.
   const FETCH_DAYS = 1500;
   let currentTimeframe = "daily";
+  // How many trailing points each sector's tail shows — independent of
+  // timeframe/smoothing, adjustable up to 20 via the tail-length slider.
+  let tailLength = 8;
 
   // Quick "jump to range and play" buttons — expressed in trading days, then
   // converted to a bar count for whatever timeframe is active (a weekly bar
@@ -368,7 +371,7 @@
       }
       s.allPoints = pts;
       s.allDates = dates;
-      s.tail = pts.slice(-preset.tail);
+      s.tail = pts.slice(-tailLength);
     });
 
     return preset;
@@ -878,7 +881,7 @@
       return;
     }
     const minLen = Math.min(...active.map((s) => s.allPoints.length));
-    const lo = preset.tail - 1;
+    const lo = tailLength - 1;
     const hi = minLen - 1;
     slider.min = lo;
     slider.max = Math.max(lo, hi);
@@ -902,7 +905,7 @@
     series.forEach((s) => {
       if (!s.allPoints || !s.allPoints.length) return;
       const at = Math.min(idx, s.allPoints.length - 1);
-      const start = Math.max(0, at - preset.tail + 1);
+      const start = Math.max(0, at - tailLength + 1);
       s.tail = s.allPoints.slice(start, at + 1);
     });
     renderChartDatasets("none");
@@ -956,7 +959,7 @@
       .map((s) => {
         const at = Math.min(playIndex, s.allPoints.length - 1);
         const to = Math.min(nextIndex, s.allPoints.length - 1);
-        const settledStart = Math.max(0, at - preset.tail + 2);
+        const settledStart = Math.max(0, at - tailLength + 2);
         return {
           s,
           from: s.allPoints[at],
@@ -1002,12 +1005,12 @@
       return;
     }
     const minLen = Math.min(...active.map((s) => s.allPoints.length));
-    if (minLen < preset.tail + 2) {
+    if (minLen < tailLength + 2) {
       flashMsg("Not enough history to animate at this timeframe yet.");
       return;
     }
     if (playIndex <= 0 || playIndex >= minLen - 1) {
-      playIndex = preset.tail - 1; // restart from the earliest full tail
+      playIndex = tailLength - 1; // restart from the earliest full tail
     }
     isPlaying = true;
     updatePlayButton();
@@ -1029,11 +1032,11 @@
     const minLen = Math.min(...active.map((s) => s.allPoints.length));
     let startIdx;
     if (range.tradingDays === Infinity) {
-      startIdx = preset.tail - 1;
+      startIdx = tailLength - 1;
     } else {
       const barsPerTradingDay = 1 / (TRADING_DAYS_PER_BAR[currentTimeframe] || 1);
       const bars = Math.max(1, Math.round(range.tradingDays * barsPerTradingDay));
-      startIdx = Math.max(preset.tail - 1, minLen - 1 - bars);
+      startIdx = Math.max(tailLength - 1, minLen - 1 - bars);
     }
     seekTo(startIdx);
     startPlay();
@@ -1080,6 +1083,19 @@
       if (!speed || speed === speedMultiplier) return;
       speedMultiplier = speed;
       speedBar.querySelectorAll(".filter-btn").forEach((b) => b.classList.toggle("is-active", b === btn));
+    });
+  }
+
+  // ---- Tail length ---------------------------------------------------------------
+  const tailSlider = document.getElementById("rrgTailSlider");
+  const tailValueEl = document.getElementById("rrgTailValue");
+  if (tailSlider) {
+    tailSlider.value = tailLength;
+    if (tailValueEl) tailValueEl.textContent = tailLength;
+    tailSlider.addEventListener("input", () => {
+      tailLength = parseInt(tailSlider.value, 10);
+      if (tailValueEl) tailValueEl.textContent = tailLength;
+      if (initialized) buildChart(); // recompute every series' tail at the new length
     });
   }
 

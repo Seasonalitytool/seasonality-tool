@@ -564,6 +564,66 @@ body {
   margin-bottom: 0;
 }
 
+.rrg-inline-controls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.rrg-tail-control {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.rrg-tail-control label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-tertiary);
+}
+
+.rrg-tail-control input[type="range"] {
+  width: 90px;
+  appearance: none;
+  -webkit-appearance: none;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--panel-border);
+  outline: none;
+  cursor: pointer;
+}
+
+.rrg-tail-control input[type="range"]::-webkit-slider-thumb {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid var(--bg-elevated);
+  box-shadow: 0 0 0 1px var(--accent-border);
+  cursor: pointer;
+}
+
+.rrg-tail-control input[type="range"]::-moz-range-thumb {
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid var(--bg-elevated);
+  box-shadow: 0 0 0 1px var(--accent-border);
+  cursor: pointer;
+}
+
+.rrg-tail-control #rrgTailValue {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--text-secondary);
+  min-width: 16px;
+}
+
 .rrg-play-btn {
   flex: 0 0 auto;
   margin-bottom: 0;
