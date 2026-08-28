@@ -589,104 +589,9 @@
     }
   }
 
-  async function addSymbol(symbolRaw) {
-    const symbol = symbolRaw.trim().toUpperCase();
-    if (!symbol) return;
-    if (series.some((s) => s.symbol === symbol)) {
-      flashMsg(`${symbol} is already on the chart.`);
-      return;
-    }
-    if (series.length >= MAX_LINES) {
-      flashMsg(`You can compare up to ${MAX_LINES} lines at once — remove one first.`);
-      return;
-    }
-    const input = document.getElementById("rrgSymbolInput");
-    const restore = input ? input.placeholder : "";
-    if (input) {
-      input.disabled = true;
-      input.placeholder = `Loading ${symbol}…`;
-    }
-    try {
-      const data = await fetchPrices(symbol);
-      series.push({
-        symbol,
-        name: tickerNameFor(symbol),
-        dates: data.dates,
-        closes: data.closes,
-        color: PALETTE[series.length % PALETTE.length],
-        removable: true,
-        visible: true,
-      });
-      buildChart();
-    } catch (err) {
-      flashMsg(`Couldn't load ${symbol}${err && err.message ? " (" + err.message + ")" : ""}.`);
-    } finally {
-      if (input) {
-        input.disabled = false;
-        input.placeholder = restore;
-      }
-    }
-  }
-
   function removeSymbol(symbol) {
     series = series.filter((s) => s.symbol !== symbol);
     buildChart();
-  }
-
-  // ---- Search bar (own instance — reuses the same static ticker list) ------
-  function setupSearch() {
-    const input = document.getElementById("rrgSymbolInput");
-    const dropdown = document.getElementById("rrgSymbolDropdown");
-    if (!input || !dropdown) return;
-
-    if (location.protocol === "file:" && !window.API_BASE_URL) {
-      input.disabled = true;
-      input.placeholder = "Run via scripts/serve.ps1 to add custom tickers";
-      return;
-    }
-
-    function closeDropdown() {
-      dropdown.hidden = true;
-      dropdown.innerHTML = "";
-    }
-
-    function renderDropdown(results) {
-      dropdown.innerHTML = "";
-      if (!results.length) {
-        closeDropdown();
-        return;
-      }
-      results.forEach((t) => {
-        const item = document.createElement("button");
-        item.type = "button";
-        item.className = "symbol-option";
-        const ticker = document.createElement("span");
-        ticker.className = "symbol-option-ticker";
-        ticker.textContent = t.s;
-        const name = document.createElement("span");
-        name.className = "symbol-option-name";
-        name.textContent = t.n;
-        item.appendChild(ticker);
-        item.appendChild(name);
-        item.addEventListener("mousedown", (e) => {
-          e.preventDefault();
-          addSymbol(t.s);
-          input.value = "";
-          closeDropdown();
-        });
-        dropdown.appendChild(item);
-      });
-      dropdown.hidden = false;
-    }
-
-    input.addEventListener("input", () => renderDropdown(searchTickers(input.value)));
-    input.addEventListener("focus", () => {
-      if (input.value.trim()) renderDropdown(searchTickers(input.value));
-    });
-    input.addEventListener("blur", () => setTimeout(closeDropdown, 120));
-    input.addEventListener("keydown", (e) => {
-      if (e.key === "Escape") closeDropdown();
-    });
   }
 
   // ---- Create-a-group panel ---------------------------------------------------
@@ -894,7 +799,6 @@
     });
   }
 
-  setupSearch();
   setupNewGroupPanel();
 
   // Sync the tab's badge/lock state immediately on load, not just on the
