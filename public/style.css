@@ -543,6 +543,54 @@ body {
   font-size: 11.5px;
   color: var(--text-tertiary);
   white-space: nowrap;
+  flex: 0 0 auto;
+  min-width: 80px;
+  text-align: right;
+}
+
+.rrg-timeline-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.rrg-timeline-slider {
+  flex: 1 1 auto;
+  appearance: none;
+  -webkit-appearance: none;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--panel-border);
+  outline: none;
+  cursor: pointer;
+}
+
+.rrg-timeline-slider::-webkit-slider-thumb {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid var(--bg-elevated);
+  box-shadow: 0 0 0 1px var(--accent-border);
+  cursor: pointer;
+}
+
+.rrg-timeline-slider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--accent);
+  border: 2px solid var(--bg-elevated);
+  box-shadow: 0 0 0 1px var(--accent-border);
+  cursor: pointer;
+}
+
+.rrg-timeline-slider:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
 }
 
 .rrg-zoom-hint {

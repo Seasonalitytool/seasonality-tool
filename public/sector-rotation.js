@@ -471,6 +471,7 @@
     computeSeriesRRG();
     renderChartDatasets();
     renderLegend();
+    setupTimelineRange();
 
     if (series.length) {
       const tfLabel = currentTimeframe.charAt(0).toUpperCase() + currentTimeframe.slice(1);
@@ -838,6 +839,60 @@
     return series.filter((s) => s.visible !== false && s.allPoints && s.allPoints.length);
   }
 
+  // ---- Timeline scrubber ------------------------------------------------------
+  // Lets someone drag straight to any point in history instead of only
+  // watching the auto-play — same underlying "settled tail ending at index"
+  // logic Play uses, just applied instantly instead of glided.
+  function setupTimelineRange() {
+    const slider = document.getElementById("rrgTimelineSlider");
+    if (!slider) return;
+    const active = playableSeries();
+    const preset = TIMEFRAME_PRESETS[currentTimeframe] || TIMEFRAME_PRESETS.daily;
+    if (!active.length) {
+      slider.min = 0;
+      slider.max = 0;
+      slider.value = 0;
+      slider.disabled = true;
+      return;
+    }
+    const minLen = Math.min(...active.map((s) => s.allPoints.length));
+    const lo = preset.tail - 1;
+    const hi = minLen - 1;
+    slider.min = lo;
+    slider.max = Math.max(lo, hi);
+    slider.value = hi; // default to "now" — matches the normal (non-scrubbed) view
+    slider.disabled = hi <= lo;
+    playIndex = hi; // keep in sync so a fresh Play click resumes from "now", not a stale index
+    updatePlayDate(active, hi);
+  }
+
+  function updateTimelineSlider(idx) {
+    const slider = document.getElementById("rrgTimelineSlider");
+    if (slider) slider.value = Math.round(idx);
+  }
+
+  function seekTo(idx) {
+    stopPlay();
+    const active = playableSeries();
+    if (!active.length) return;
+    const preset = TIMEFRAME_PRESETS[currentTimeframe] || TIMEFRAME_PRESETS.daily;
+    playIndex = idx;
+    series.forEach((s) => {
+      if (!s.allPoints || !s.allPoints.length) return;
+      const at = Math.min(idx, s.allPoints.length - 1);
+      const start = Math.max(0, at - preset.tail + 1);
+      s.tail = s.allPoints.slice(start, at + 1);
+    });
+    renderChartDatasets("none");
+    renderLegend();
+    updatePlayDate(active, idx);
+  }
+
+  const timelineSlider = document.getElementById("rrgTimelineSlider");
+  if (timelineSlider) {
+    timelineSlider.addEventListener("input", () => seekTo(parseInt(timelineSlider.value, 10)));
+  }
+
   function updatePlayButton() {
     const btn = document.getElementById("rrgPlayBtn");
     if (!btn) return;
@@ -909,6 +964,7 @@
       } else {
         playIndex = nextIndex;
         renderLegend(); // once per settled step, not every glide tick
+        updateTimelineSlider(playIndex);
         playAnimHandle = requestAnimationFrame(playStep);
       }
     }
