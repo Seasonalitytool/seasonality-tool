@@ -511,12 +511,6 @@
         chip.appendChild(name);
       }
 
-      const value = document.createElement("span");
-      value.className = "legend-value";
-      const last = s.tail && s.tail[s.tail.length - 1];
-      value.textContent = last ? `${last.x.toFixed(1)}, ${last.y.toFixed(1)}` : "—";
-      chip.appendChild(value);
-
       if (s.removable) {
         const remove = document.createElement("button");
         remove.type = "button";
