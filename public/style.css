@@ -181,14 +181,20 @@ body {
 .page-tabs-row {
   display: flex;
   justify-content: center;
-  padding: 14px 24px 0;
+  padding: 20px 24px 0;
 }
 
 .page-tabs {
   display: inline-flex;
-  gap: 4px;
-  width: 100%;
-  max-width: 1080px;
+  gap: 3px;
+  padding: 4px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--panel-border);
+  border-radius: 12px;
+}
+
+:root[data-theme="light"] .page-tabs {
+  background: rgba(0, 0, 0, 0.02);
 }
 
 .page-tab {
@@ -196,12 +202,12 @@ body {
   appearance: none;
   border: none;
   background: transparent;
-  color: var(--text-tertiary);
+  color: var(--text-secondary);
   font-family: var(--font-sans);
-  font-size: 13.5px;
+  font-size: 13px;
   font-weight: 600;
-  padding: 10px 18px;
-  border-radius: 10px 10px 0 0;
+  padding: 9px 20px;
+  border-radius: 8px;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
@@ -214,10 +220,8 @@ body {
 }
 
 .page-tab.is-active {
-  color: var(--text-primary);
-  background: linear-gradient(180deg, var(--bg-elevated) 0%, var(--panel) 100%);
-  border: 1px solid var(--panel-border);
-  border-bottom-color: transparent;
+  color: var(--accent);
+  background: var(--accent-soft);
 }
 
 .pro-badge-inline {
