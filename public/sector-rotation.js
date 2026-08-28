@@ -123,7 +123,7 @@
   let currentTimeframe = "daily";
   // How many trailing points each sector's tail shows — independent of
   // timeframe/smoothing, adjustable up to 20 via the tail-length slider.
-  let tailLength = 8;
+  let tailLength = 10;
 
   // Quick "jump to range and play" buttons — expressed in trading days, then
   // converted to a bar count for whatever timeframe is active (a weekly bar
