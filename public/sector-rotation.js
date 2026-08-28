@@ -188,21 +188,16 @@
     return { rsRatio, rsMomentum };
   }
 
-  function tailPoints(rsRatio, rsMomentum, n) {
-    const pts = [];
-    for (let i = rsRatio.length - 1; i >= 0 && pts.length < n; i--) {
-      if (rsRatio[i] != null && rsMomentum[i] != null) {
-        pts.unshift({ x: rsRatio[i], y: rsMomentum[i] });
-      }
-    }
-    return pts;
-  }
-
   // ---- State --------------------------------------------------------------
   let benchmark = null; // {symbol, dates, closes}
-  let series = []; // [{symbol, name, dates, closes, color, removable, tail}]
+  let series = []; // [{symbol, name, dates, closes, color, removable, allPoints, allDates, tail}]
   let chart = null;
   let initialized = false;
+
+  let isPlaying = false;
+  let playIndex = 0;
+  let playTimer = null;
+  const PLAY_INTERVAL_MS = 500;
 
   function apiUrl(path) {
     return `${window.API_BASE_URL || ""}${path}`;
@@ -319,16 +314,20 @@
     return { min: 100 - pad, max: 100 + pad };
   }
 
-  function buildChart() {
-    const canvas = document.getElementById("rrgChart");
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-
+  // Computes every series' FULL point history (not just the visible tail) —
+  // needed so the play/animate feature can scrub back through time, not
+  // just show the current snapshot.
+  function computeSeriesRRG() {
     const preset = TIMEFRAME_PRESETS[currentTimeframe] || TIMEFRAME_PRESETS.daily;
     const benchResampled = benchmark ? resample(benchmark.dates, benchmark.closes, currentTimeframe) : null;
 
     series.forEach((s) => {
-      if (!benchResampled) return;
+      if (!benchResampled) {
+        s.allPoints = [];
+        s.allDates = [];
+        s.tail = [];
+        return;
+      }
       const symResampled = resample(s.dates, s.closes, currentTimeframe);
       const { rsRatio, rsMomentum } = computeRRG(
         benchResampled.dates,
@@ -337,8 +336,29 @@
         symResampled.closes,
         preset
       );
-      s.tail = tailPoints(rsRatio, rsMomentum, preset.tail);
+      const pts = [];
+      const dates = [];
+      for (let i = 0; i < rsRatio.length; i++) {
+        if (rsRatio[i] != null && rsMomentum[i] != null) {
+          pts.push({ x: rsRatio[i], y: rsMomentum[i] });
+          dates.push(symResampled.dates[i]);
+        }
+      }
+      s.allPoints = pts;
+      s.allDates = dates;
+      s.tail = pts.slice(-preset.tail);
     });
+
+    return preset;
+  }
+
+  // Rebuilds the Chart.js datasets from each series' CURRENT s.tail —
+  // deliberately cheap (no RS-Ratio recomputation) so it can run every
+  // animation frame during playback without recalculating anything.
+  function renderChartDatasets() {
+    const canvas = document.getElementById("rrgChart");
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
 
     const datasets = series
       .filter((s) => s.tail && s.tail.length)
@@ -435,7 +455,16 @@
         plugins: [quadrantPlugin, labelPlugin],
       });
     }
+  }
 
+  // Full pipeline: recompute RS-Ratio/Momentum for every series, redraw the
+  // chart from each one's current (latest) tail, and refresh the legend/
+  // footer. Called whenever the underlying data or settings change (new
+  // group, symbol added/removed, timeframe switched, visibility toggled).
+  function buildChart() {
+    stopPlay(); // a full rebuild always means "fresh data" — any running animation is now stale
+    computeSeriesRRG();
+    renderChartDatasets();
     renderLegend();
 
     if (series.length) {
@@ -796,6 +825,86 @@
   if (rrgCanvas) {
     rrgCanvas.addEventListener("dblclick", () => {
       if (chart) chart.resetZoom();
+    });
+  }
+
+  // ---- Play / animate the tail through time -----------------------------------
+  function playableSeries() {
+    return series.filter((s) => s.visible !== false && s.allPoints && s.allPoints.length);
+  }
+
+  function updatePlayButton() {
+    const btn = document.getElementById("rrgPlayBtn");
+    if (!btn) return;
+    btn.textContent = isPlaying ? "⏸ Pause" : "▶ Play";
+    btn.classList.toggle("is-playing", isPlaying);
+  }
+
+  function stepFrame() {
+    const active = playableSeries();
+    const preset = TIMEFRAME_PRESETS[currentTimeframe] || TIMEFRAME_PRESETS.daily;
+    if (!active.length) {
+      stopPlay();
+      return;
+    }
+    const minLen = Math.min(...active.map((s) => s.allPoints.length));
+    if (playIndex >= minLen - 1) {
+      buildChart(); // snap every series back to its own true latest tail
+      return;
+    }
+    series.forEach((s) => {
+      if (!s.allPoints || !s.allPoints.length) return;
+      const end = Math.min(playIndex, s.allPoints.length - 1);
+      s.tail = s.allPoints.slice(Math.max(0, end - preset.tail + 1), end + 1);
+    });
+    renderChartDatasets();
+    renderLegend();
+
+    const dateEl = document.getElementById("rrgPlayDate");
+    if (dateEl) {
+      const ref = active.reduce((a, b) => (a.allDates.length <= b.allDates.length ? a : b));
+      const idx = Math.min(playIndex, ref.allDates.length - 1);
+      dateEl.textContent = ref.allDates[idx] || "";
+    }
+    playIndex++;
+  }
+
+  function startPlay() {
+    const active = playableSeries();
+    const preset = TIMEFRAME_PRESETS[currentTimeframe] || TIMEFRAME_PRESETS.daily;
+    if (!active.length) {
+      flashMsg("Nothing visible to animate — show at least one ticker.");
+      return;
+    }
+    const minLen = Math.min(...active.map((s) => s.allPoints.length));
+    if (minLen < preset.tail + 2) {
+      flashMsg("Not enough history to animate at this timeframe yet.");
+      return;
+    }
+    if (playIndex <= 0 || playIndex >= minLen - 1) {
+      playIndex = preset.tail - 1; // restart from the earliest full tail
+    }
+    isPlaying = true;
+    updatePlayButton();
+    clearInterval(playTimer);
+    playTimer = setInterval(stepFrame, PLAY_INTERVAL_MS);
+  }
+
+  function stopPlay() {
+    if (!isPlaying && !playTimer) return;
+    isPlaying = false;
+    clearInterval(playTimer);
+    playTimer = null;
+    updatePlayButton();
+    const dateEl = document.getElementById("rrgPlayDate");
+    if (dateEl) dateEl.textContent = "";
+  }
+
+  const playBtn = document.getElementById("rrgPlayBtn");
+  if (playBtn) {
+    playBtn.addEventListener("click", () => {
+      if (isPlaying) stopPlay();
+      else startPlay();
     });
   }
 

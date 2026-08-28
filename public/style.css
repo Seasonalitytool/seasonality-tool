@@ -518,9 +518,31 @@ body {
   margin-bottom: 0;
 }
 
-.rrg-reset-zoom-btn {
+.rrg-toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   flex: 0 0 auto;
   margin-bottom: 18px;
+}
+
+.rrg-reset-zoom-btn,
+.rrg-play-btn {
+  flex: 0 0 auto;
+  margin-bottom: 0;
+}
+
+.rrg-play-btn.is-playing {
+  background: var(--accent-soft);
+  color: var(--accent);
+  border-color: var(--accent-border);
+}
+
+.rrg-play-date {
+  font-family: var(--font-mono);
+  font-size: 11.5px;
+  color: var(--text-tertiary);
+  white-space: nowrap;
 }
 
 .rrg-zoom-hint {
