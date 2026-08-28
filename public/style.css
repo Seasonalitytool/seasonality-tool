@@ -61,6 +61,16 @@
 
 * { box-sizing: border-box; }
 
+/* Always reserve space for the vertical scrollbar, even on a page short
+   enough not to need one. Without this, switching between the Seasonality
+   and Sector Rotation tabs (very different content heights) makes the
+   scrollbar appear/disappear, which shifts the usable viewport width and
+   makes the panel below visibly resize on every swap. */
+html {
+  overflow-y: scroll;
+  scrollbar-gutter: stable;
+}
+
 html, body {
   margin: 0;
   padding: 0;
