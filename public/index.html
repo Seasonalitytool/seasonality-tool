@@ -166,20 +166,16 @@
         </div>
 
         <div class="symbol-search-msg" id="rrgSearchMsg" hidden></div>
-        <div class="rrg-toolbar">
-          <div class="symbol-legend" id="rrgLegend"></div>
-          <div class="rrg-toolbar-actions">
-            <button type="button" class="hide-spx-btn rrg-play-btn" id="rrgPlayBtn">▶ Play</button>
-            <button type="button" class="hide-spx-btn rrg-reset-zoom-btn" id="rrgResetZoomBtn">Reset zoom</button>
-          </div>
-        </div>
+        <div class="symbol-legend" id="rrgLegend"></div>
 
         <div class="rrg-timeline-row">
+          <button type="button" class="hide-spx-btn rrg-play-btn" id="rrgPlayBtn">▶ Play</button>
           <input type="range" id="rrgTimelineSlider" class="rrg-timeline-slider" min="0" max="0" value="0" step="1" />
           <span class="rrg-play-date" id="rrgPlayDate"></span>
         </div>
 
         <div class="chart-wrap rrg-chart-wrap">
+          <button type="button" class="rrg-reset-zoom-btn" id="rrgResetZoomBtn">Reset zoom</button>
           <canvas id="rrgChart"></canvas>
           <div class="rrg-lock-overlay" id="rrgLockOverlay" hidden>
             <div class="rrg-lock-box">

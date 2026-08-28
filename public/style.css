@@ -506,27 +506,19 @@ body {
   margin-bottom: 18px;
 }
 
-.rrg-toolbar {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.rrg-toolbar .symbol-legend {
-  flex: 1 1 auto;
-  margin-bottom: 0;
-}
-
-.rrg-toolbar-actions {
+/* Play + scrubber, grouped as one control bar directly above the chart it
+   controls, in its own subtle panel so it reads as a single unit. */
+.rrg-timeline-row {
   display: flex;
   align-items: center;
-  gap: 10px;
-  flex: 0 0 auto;
-  margin-bottom: 18px;
+  gap: 14px;
+  margin-bottom: 16px;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--panel-border);
+  border-radius: 10px;
 }
 
-.rrg-reset-zoom-btn,
 .rrg-play-btn {
   flex: 0 0 auto;
   margin-bottom: 0;
@@ -546,13 +538,6 @@ body {
   flex: 0 0 auto;
   min-width: 80px;
   text-align: right;
-}
-
-.rrg-timeline-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 16px;
 }
 
 .rrg-timeline-slider {
@@ -591,6 +576,33 @@ body {
 .rrg-timeline-slider:disabled {
   opacity: 0.4;
   cursor: not-allowed;
+}
+
+/* Sits right in the chart's own corner instead of up in a separate toolbar
+   — a reset control reads more clearly when it's attached to the thing it
+   resets. */
+.rrg-reset-zoom-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 5;
+  appearance: none;
+  border: 1px solid var(--panel-border);
+  background: var(--bg-elevated);
+  color: var(--text-secondary);
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: 500;
+  padding: 6px 11px;
+  border-radius: 8px;
+  cursor: pointer;
+  box-shadow: 0 4px 14px -4px rgba(0, 0, 0, 0.4);
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+
+.rrg-reset-zoom-btn:hover {
+  color: var(--text-primary);
+  border-color: var(--accent-border);
 }
 
 .rrg-zoom-hint {
