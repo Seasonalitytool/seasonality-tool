@@ -369,6 +369,7 @@
       .filter((s) => s.tail && s.tail.length)
       .map((s) => ({
         label: s.symbol,
+        fullName: s.name,
         data: s.tail,
         hidden: s.visible === false,
         borderColor: s.color,
@@ -441,7 +442,11 @@
               titleColor: cssVar("--text-primary"),
               bodyColor: cssVar("--text-secondary"),
               callbacks: {
-                title: (items) => (items[0] ? items[0].dataset.label : ""),
+                title: (items) => {
+                  if (!items[0]) return "";
+                  const ds = items[0].dataset;
+                  return ds.fullName && ds.fullName !== ds.label ? `${ds.label} — ${ds.fullName}` : ds.label;
+                },
                 label: (item) => `RS-Ratio: ${item.parsed.x.toFixed(2)} · RS-Momentum: ${item.parsed.y.toFixed(2)}`,
               },
             },
