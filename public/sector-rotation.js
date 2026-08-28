@@ -5,6 +5,24 @@
     return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
   }
 
+  // Fades the tail from fully opaque at "today" down to MIN_TAIL_ALPHA at
+  // its oldest point, so overlapping sectors' trails read as a fading path
+  // rather than a tangle of equally-bold lines.
+  const MIN_TAIL_ALPHA = 0.5;
+  function hexToRgba(hex, alpha) {
+    const h = hex.replace("#", "");
+    const full = h.length === 3 ? h.split("").map((c) => c + c).join("") : h;
+    const bigint = parseInt(full, 16);
+    const r = (bigint >> 16) & 255;
+    const g = (bigint >> 8) & 255;
+    const b = bigint & 255;
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  }
+  function alphaForTailIndex(i, n) {
+    if (n <= 1) return 1;
+    return MIN_TAIL_ALPHA + (i / (n - 1)) * (1 - MIN_TAIL_ALPHA);
+  }
+
   const tickerList = window.TICKER_LIST || [];
   function tickerNameFor(sym) {
     const t = tickerList.find((t) => t.s === sym);
@@ -387,22 +405,30 @@
 
     const datasets = series
       .filter((s) => s.tail && s.tail.length)
-      .map((s) => ({
-        label: s.symbol,
-        fullName: s.name,
-        data: s.tail,
-        hidden: s.visible === false,
-        borderColor: s.color,
-        backgroundColor: s.color,
-        showLine: true,
-        tension: 0,
-        borderWidth: 2,
-        pointRadius: s.tail.map((_, i) => (i === s.tail.length - 1 ? 6 : 3)),
-        pointHoverRadius: 7,
-        pointBackgroundColor: s.tail.map((_, i) => (i === s.tail.length - 1 ? s.color : cssVar("--bg-elevated"))),
-        pointBorderColor: s.color,
-        pointBorderWidth: 2,
-      }));
+      .map((s) => {
+        const n = s.tail.length;
+        return {
+          label: s.symbol,
+          fullName: s.name,
+          data: s.tail,
+          hidden: s.visible === false,
+          borderColor: s.color,
+          backgroundColor: s.color,
+          // Fades each line segment toward the older of its two endpoints,
+          // so the trail visibly dims the further back it goes.
+          segment: {
+            borderColor: (ctx) => hexToRgba(s.color, alphaForTailIndex(Math.min(ctx.p0DataIndex, ctx.p1DataIndex), n)),
+          },
+          showLine: true,
+          tension: 0,
+          borderWidth: 2,
+          pointRadius: s.tail.map((_, i) => (i === n - 1 ? 6 : 3)),
+          pointHoverRadius: 7,
+          pointBackgroundColor: s.tail.map((_, i) => (i === n - 1 ? s.color : cssVar("--bg-elevated"))),
+          pointBorderColor: s.tail.map((_, i) => hexToRgba(s.color, alphaForTailIndex(i, n))),
+          pointBorderWidth: 2,
+        };
+      });
 
     if (chart) {
       // Deliberately NOT touching x/y min/max here — the user may have
