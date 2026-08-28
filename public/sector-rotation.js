@@ -303,14 +303,19 @@
     },
   };
 
+  // Uses each series' FULL history (not just the visible tail) so the fixed
+  // initial view already covers everywhere the Play animation will scrub
+  // to — otherwise older points during playback render outside the axes.
+  // Padded generously (and defaults a bit more zoomed-out) so points never
+  // sit right at the edge.
   function computeAxisRange() {
-    let maxDev = 6; // minimum half-range so a quiet market doesn't over-zoom
+    let maxDev = 8; // minimum half-range so a quiet market doesn't over-zoom
     series.forEach((s) => {
-      (s.tail || []).forEach((p) => {
+      (s.allPoints || s.tail || []).forEach((p) => {
         maxDev = Math.max(maxDev, Math.abs(p.x - 100), Math.abs(p.y - 100));
       });
     });
-    const pad = maxDev * 1.15;
+    const pad = maxDev * 1.35;
     return { min: 100 - pad, max: 100 + pad };
   }
 
@@ -448,7 +453,7 @@
                 drag: { enabled: false },
                 mode: "xy",
               },
-              limits: { x: { min: 50, max: 150 }, y: { min: 50, max: 150 } },
+              limits: { x: { min: 20, max: 180 }, y: { min: 20, max: 180 } },
             },
           },
         },
