@@ -5,10 +5,13 @@
     return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
   }
 
-  // Fades the tail from fully opaque at "today" down to MIN_TAIL_ALPHA at
-  // its oldest point, so overlapping sectors' trails read as a fading path
-  // rather than a tangle of equally-bold lines.
-  const MIN_TAIL_ALPHA = 0.5;
+  // Fades the tail from 100% at "today," stepping down 5 percentage points
+  // per position further back (so a max-length 20-point tail's oldest point
+  // lands right at the 20% floor) — shorter tails fade more mildly since
+  // they never reach that many steps back. Overlapping sectors' trails then
+  // read as a fading path rather than a tangle of equally-bold lines.
+  const TAIL_ALPHA_STEP = 0.05;
+  const TAIL_ALPHA_FLOOR = 0.2;
   function hexToRgba(hex, alpha) {
     const h = hex.replace("#", "");
     const full = h.length === 3 ? h.split("").map((c) => c + c).join("") : h;
@@ -19,8 +22,8 @@
     return `rgba(${r}, ${g}, ${b}, ${alpha})`;
   }
   function alphaForTailIndex(i, n) {
-    if (n <= 1) return 1;
-    return MIN_TAIL_ALPHA + (i / (n - 1)) * (1 - MIN_TAIL_ALPHA);
+    const stepsBack = n - 1 - i; // 0 for the newest (last) point
+    return Math.max(TAIL_ALPHA_FLOOR, 1 - stepsBack * TAIL_ALPHA_STEP);
   }
 
   const tickerList = window.TICKER_LIST || [];
