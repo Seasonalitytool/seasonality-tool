@@ -494,7 +494,12 @@
   function buildChart() {
     stopPlay(); // a full rebuild always means "fresh data" — any running animation is now stale
     computeSeriesRRG();
-    renderChartDatasets();
+    // "none" — Chart.js's default animation replays as a full-trail "appear"
+    // effect whenever the whole dataset array is replaced (e.g. snapping
+    // back to "now" at the end of Play), which is exactly the stutter we
+    // removed everywhere else. Every position change on this chart is
+    // either driven by our own tween or should apply instantly.
+    renderChartDatasets("none");
     renderLegend();
     setupTimelineRange();
 
