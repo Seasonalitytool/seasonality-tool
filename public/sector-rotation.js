@@ -196,8 +196,8 @@
 
   let isPlaying = false;
   let playIndex = 0;
-  let playTimer = null;
-  const PLAY_INTERVAL_MS = 500;
+  let playAnimHandle = null;
+  const GLIDE_MS = 450; // time to smoothly glide from one point to the next
 
   function apiUrl(path) {
     return `${window.API_BASE_URL || ""}${path}`;
@@ -360,7 +360,7 @@
   // Rebuilds the Chart.js datasets from each series' CURRENT s.tail —
   // deliberately cheap (no RS-Ratio recomputation) so it can run every
   // animation frame during playback without recalculating anything.
-  function renderChartDatasets() {
+  function renderChartDatasets(mode) {
     const canvas = document.getElementById("rrgChart");
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
@@ -394,14 +394,14 @@
       chart.options.scales.y.ticks.color = cssVar("--chart-tick");
       chart.options.scales.x.grid.color = cssVar("--chart-grid");
       chart.options.scales.y.grid.color = cssVar("--chart-grid");
-      chart.update();
+      chart.update(mode);
       // Chart.js only reads a dataset's `hidden` flag the first time it
       // creates that dataset's internal meta — reassigning chart.data.datasets
       // above does NOT re-apply it on later updates (toggling a legend chip,
       // adding a symbol, etc.), so visibility has to be set explicitly here
       // every time instead.
       datasets.forEach((ds, i) => chart.setDatasetVisibility(i, !ds.hidden));
-      chart.update();
+      chart.update(mode);
     } else {
       const range = computeAxisRange(); // only used for the initial auto-fit view
 
@@ -834,6 +834,12 @@
   }
 
   // ---- Play / animate the tail through time -----------------------------------
+  // Rather than letting Chart.js animate the whole sliding-window array every
+  // step (which makes the entire trail visibly "shift" each frame, since
+  // Chart.js interpolates by array index and every index's value changes
+  // when the window slides), only the newest point is tweened smoothly
+  // between its previous and next position each step; already-settled trail
+  // points are drawn at their final position immediately and stay put.
   function playableSeries() {
     return series.filter((s) => s.visible !== false && s.allPoints && s.allPoints.length);
   }
@@ -845,7 +851,19 @@
     btn.classList.toggle("is-playing", isPlaying);
   }
 
-  function stepFrame() {
+  function updatePlayDate(active, idx) {
+    const dateEl = document.getElementById("rrgPlayDate");
+    if (!dateEl || !active.length) return;
+    const ref = active.reduce((a, b) => (a.allDates.length <= b.allDates.length ? a : b));
+    const i = Math.min(Math.round(idx), ref.allDates.length - 1);
+    dateEl.textContent = ref.allDates[i] || "";
+  }
+
+  // Advances one step: glides every visible series' lead point from its
+  // current position to the next data point over GLIDE_MS, easing in/out,
+  // then commits and immediately schedules the next step.
+  function playStep() {
+    if (!isPlaying) return;
     const active = playableSeries();
     const preset = TIMEFRAME_PRESETS[currentTimeframe] || TIMEFRAME_PRESETS.daily;
     if (!active.length) {
@@ -857,21 +875,50 @@
       buildChart(); // snap every series back to its own true latest tail
       return;
     }
-    series.forEach((s) => {
-      if (!s.allPoints || !s.allPoints.length) return;
-      const end = Math.min(playIndex, s.allPoints.length - 1);
-      s.tail = s.allPoints.slice(Math.max(0, end - preset.tail + 1), end + 1);
-    });
-    renderChartDatasets();
-    renderLegend();
 
-    const dateEl = document.getElementById("rrgPlayDate");
-    if (dateEl) {
-      const ref = active.reduce((a, b) => (a.allDates.length <= b.allDates.length ? a : b));
-      const idx = Math.min(playIndex, ref.allDates.length - 1);
-      dateEl.textContent = ref.allDates[idx] || "";
+    const nextIndex = playIndex + 1;
+    // Per series: the settled trail (fixed, already-reached points) and the
+    // from/to positions the lead point glides between this step.
+    const frames = series
+      .filter((s) => s.allPoints && s.allPoints.length)
+      .map((s) => {
+        const at = Math.min(playIndex, s.allPoints.length - 1);
+        const to = Math.min(nextIndex, s.allPoints.length - 1);
+        const settledStart = Math.max(0, at - preset.tail + 2);
+        return {
+          s,
+          from: s.allPoints[at],
+          to: s.allPoints[to],
+          settled: s.allPoints.slice(settledStart, at + 1), // includes "from" as its last entry
+        };
+      });
+
+    const startTime = performance.now();
+    function easeInOut(t) {
+      return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
     }
-    playIndex++;
+
+    function tick(now) {
+      if (!isPlaying) return;
+      const t = Math.min(1, (now - startTime) / GLIDE_MS);
+      const e = easeInOut(t);
+      frames.forEach(({ s, from, to, settled }) => {
+        const hx = from.x + (to.x - from.x) * e;
+        const hy = from.y + (to.y - from.y) * e;
+        s.tail = settled.slice(0, -1).concat([{ x: hx, y: hy }]);
+      });
+      renderChartDatasets("none"); // no built-in animation — we're driving it ourselves
+      updatePlayDate(active, playIndex + e);
+
+      if (t < 1) {
+        playAnimHandle = requestAnimationFrame(tick);
+      } else {
+        playIndex = nextIndex;
+        renderLegend(); // once per settled step, not every glide tick
+        playAnimHandle = requestAnimationFrame(playStep);
+      }
+    }
+    playAnimHandle = requestAnimationFrame(tick);
   }
 
   function startPlay() {
@@ -891,15 +938,15 @@
     }
     isPlaying = true;
     updatePlayButton();
-    clearInterval(playTimer);
-    playTimer = setInterval(stepFrame, PLAY_INTERVAL_MS);
+    cancelAnimationFrame(playAnimHandle);
+    playStep();
   }
 
   function stopPlay() {
-    if (!isPlaying && !playTimer) return;
+    if (!isPlaying && !playAnimHandle) return;
     isPlaying = false;
-    clearInterval(playTimer);
-    playTimer = null;
+    cancelAnimationFrame(playAnimHandle);
+    playAnimHandle = null;
     updatePlayButton();
     const dateEl = document.getElementById("rrgPlayDate");
     if (dateEl) dateEl.textContent = "";
