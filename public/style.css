@@ -522,15 +522,28 @@ body {
 
 /* Play + scrubber, grouped as one control bar directly above the chart it
    controls, in its own subtle panel so it reads as a single unit. */
+/* One unified box for every playback control — timeline, quick-ranges, and
+   speed — so they read as a single control panel instead of separate,
+   differently-styled pieces. */
+.rrg-playback-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 18px;
+  padding: 14px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--panel-border);
+  border-radius: 10px;
+}
+
+:root[data-theme="light"] .rrg-playback-panel {
+  background: rgba(0, 0, 0, 0.015);
+}
+
 .rrg-timeline-row {
   display: flex;
   align-items: center;
   gap: 14px;
-  margin-bottom: 10px;
-  padding: 10px 14px;
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid var(--panel-border);
-  border-radius: 10px;
 }
 
 .rrg-play-options-row {
@@ -539,7 +552,8 @@ body {
   justify-content: space-between;
   flex-wrap: wrap;
   gap: 10px;
-  margin-bottom: 18px;
+  padding-top: 12px;
+  border-top: 1px solid var(--panel-border);
 }
 
 .rrg-quick-range-bar {

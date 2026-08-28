@@ -168,18 +168,20 @@
         <div class="symbol-search-msg" id="rrgSearchMsg" hidden></div>
         <div class="symbol-legend" id="rrgLegend"></div>
 
-        <div class="rrg-timeline-row">
-          <button type="button" class="hide-spx-btn rrg-play-btn" id="rrgPlayBtn">▶ Play</button>
-          <input type="range" id="rrgTimelineSlider" class="rrg-timeline-slider" min="0" max="0" value="0" step="1" />
-          <span class="rrg-play-date" id="rrgPlayDate"></span>
-        </div>
+        <div class="rrg-playback-panel">
+          <div class="rrg-timeline-row">
+            <button type="button" class="hide-spx-btn rrg-play-btn" id="rrgPlayBtn">▶ Play</button>
+            <input type="range" id="rrgTimelineSlider" class="rrg-timeline-slider" min="0" max="0" value="0" step="1" />
+            <span class="rrg-play-date" id="rrgPlayDate"></span>
+          </div>
 
-        <div class="rrg-play-options-row">
-          <div class="era-bar rrg-quick-range-bar" id="rrgQuickRangeBar" role="group" aria-label="Jump to range and play"></div>
-          <div class="filter-bar" role="group" aria-label="Playback speed" id="rrgSpeedBar">
-            <button class="filter-btn is-active" type="button" data-speed="1">1×</button>
-            <button class="filter-btn" type="button" data-speed="2">2×</button>
-            <button class="filter-btn" type="button" data-speed="4">4×</button>
+          <div class="rrg-play-options-row">
+            <div class="era-bar rrg-quick-range-bar" id="rrgQuickRangeBar" role="group" aria-label="Jump to range and play"></div>
+            <div class="filter-bar" role="group" aria-label="Playback speed" id="rrgSpeedBar">
+              <button class="filter-btn is-active" type="button" data-speed="1">1×</button>
+              <button class="filter-btn" type="button" data-speed="2">2×</button>
+              <button class="filter-btn" type="button" data-speed="4">4×</button>
+            </div>
           </div>
         </div>
 
