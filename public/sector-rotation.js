@@ -47,18 +47,6 @@
 
   // ---- Constants --------------------------------------------------------------
   const BENCHMARK_SYMBOL = "^GSPC";
-  // Friendly names for common index tickers — falls back to the raw symbol
-  // (minus a leading "^") for anything not in this small list, so the axis
-  // title never breaks if the benchmark ever changes.
-  const BENCHMARK_DISPLAY_NAMES = {
-    "^GSPC": "S&P 500",
-    "^DJI": "Dow Jones",
-    "^IXIC": "Nasdaq",
-    "^RUT": "Russell 2000",
-  };
-  function benchmarkDisplayName() {
-    return BENCHMARK_DISPLAY_NAMES[BENCHMARK_SYMBOL] || BENCHMARK_SYMBOL.replace(/^\^/, "");
-  }
   const SECTORS = [
     { symbol: "XLK", name: "Technology" },
     { symbol: "XLF", name: "Financials" },
@@ -456,7 +444,7 @@
       chart.options.scales.y.ticks.color = cssVar("--chart-tick");
       chart.options.scales.x.grid.color = cssVar("--chart-grid");
       chart.options.scales.y.grid.color = cssVar("--chart-grid");
-      chart.options.scales.x.title.text = `vs. ${benchmarkDisplayName()}`; // stays correct if the benchmark ever changes
+      
       chart.update(mode);
       // Chart.js only reads a dataset's `hidden` flag the first time it
       // creates that dataset's internal meta — reassigning chart.data.datasets
@@ -483,7 +471,7 @@
               max: range.max,
               title: {
                 display: true,
-                text: `vs. ${benchmarkDisplayName()}`,
+                text: "Performance",
                 color: cssVar("--text-tertiary"),
                 font: { size: 11 },
               },
@@ -531,7 +519,7 @@
                   return ds.fullName && ds.fullName !== ds.label ? `${ds.label} — ${ds.fullName}` : ds.label;
                 },
                 label: (item) =>
-                  `vs. ${benchmarkDisplayName()}: ${item.parsed.x.toFixed(2)} · Momentum: ${item.parsed.y.toFixed(2)}`,
+                  `Performance: ${item.parsed.x.toFixed(2)} · Momentum: ${item.parsed.y.toFixed(2)}`,
               },
             },
             zoom: {
