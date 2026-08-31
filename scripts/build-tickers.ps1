@@ -52,6 +52,39 @@ foreach ($line in ($otherLines | Select-Object -Skip 1)) {
     Add-Ticker -symbol $f[0] -name $f[1] -etf $f[4] -testIssue $f[6]
 }
 
+# NASDAQ's directories only cover stock-exchange-listed securities, so raw
+# crypto pairs (as opposed to crypto ETFs like IBIT, which ARE listed and
+# already included above) don't appear there at all. Yahoo Finance quotes
+# them under a "<COIN>-USD" symbol, which api/history.js already fetches
+# fine as-is - they just need to be hand-added here so they're searchable.
+$cryptoPairs = @(
+    @{ s = "BTC-USD"; n = "Bitcoin USD" },
+    @{ s = "ETH-USD"; n = "Ethereum USD" },
+    @{ s = "SOL-USD"; n = "Solana USD" },
+    @{ s = "XRP-USD"; n = "XRP USD" },
+    @{ s = "BNB-USD"; n = "BNB USD" },
+    @{ s = "DOGE-USD"; n = "Dogecoin USD" },
+    @{ s = "ADA-USD"; n = "Cardano USD" },
+    @{ s = "TRX-USD"; n = "TRON USD" },
+    @{ s = "AVAX-USD"; n = "Avalanche USD" },
+    @{ s = "LINK-USD"; n = "Chainlink USD" },
+    @{ s = "TON-USD"; n = "Toncoin USD" },
+    @{ s = "SHIB-USD"; n = "Shiba Inu USD" },
+    @{ s = "DOT-USD"; n = "Polkadot USD" },
+    @{ s = "LTC-USD"; n = "Litecoin USD" },
+    @{ s = "BCH-USD"; n = "Bitcoin Cash USD" },
+    @{ s = "UNI-USD"; n = "Uniswap USD" },
+    @{ s = "NEAR-USD"; n = "NEAR Protocol USD" },
+    @{ s = "XLM-USD"; n = "Stellar USD" },
+    @{ s = "ETC-USD"; n = "Ethereum Classic USD" },
+    @{ s = "ATOM-USD"; n = "Cosmos USD" }
+)
+foreach ($c in $cryptoPairs) {
+    if ($seen.ContainsKey($c.s)) { continue }
+    $seen[$c.s] = $true
+    $list.Add([PSCustomObject]@{ s = $c.s; n = $c.n })
+}
+
 $sorted = $list | Sort-Object s
 Write-Host "Bundled $($sorted.Count) tickers."
 
