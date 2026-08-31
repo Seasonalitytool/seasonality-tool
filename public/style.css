@@ -943,8 +943,13 @@ body {
 .range-input {
   position: absolute;
   top: 0;
-  left: 0;
-  width: 100%;
+  /* A native range thumb's travel is inset by half its own width from each
+     end of the track, so at the min/max value the handle sits a few pixels
+     short of the track's actual edge. Widen the input by one thumb-width
+     and shift it left by half that so the handle's center reaches all the
+     way to the year-grid's true left/right edge. */
+  left: -3.5px;
+  width: calc(100% + 7px);
   height: 22px;
   margin: 0;
   background: transparent;
