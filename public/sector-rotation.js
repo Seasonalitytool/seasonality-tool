@@ -233,6 +233,11 @@
 
   let isPlaying = false;
   let playIndex = 0;
+  // Remembers wherever the user last scrubbed/jumped to (e.g. "Last 5 Days"),
+  // so pressing Play again after a full playback finishes (which snaps back
+  // to "now") replays from that same starting point instead of always
+  // restarting from the very earliest fetched data.
+  let lastPlayStartIndex = null;
   let playAnimHandle = null;
   const BASE_GLIDE_MS = 450; // time to glide from one point to the next at 1×
   let speedMultiplier = 1;
@@ -624,6 +629,7 @@
 
   async function loadGroup(group) {
     closeNewGroupPanel(); // switching groups while creating a new one should close that panel
+    lastPlayStartIndex = null; // a new group's data makes the old index meaningless
     activeGroupId = group.id;
     renderGroupBar();
     const subEl = document.getElementById("rrgPanelSub");
@@ -904,6 +910,7 @@
       const tf = btn.getAttribute("data-timeframe");
       if (!tf || tf === currentTimeframe) return;
       currentTimeframe = tf;
+      lastPlayStartIndex = null; // bar count/meaning changes with the timeframe
       timeframeBar.querySelectorAll(".filter-btn").forEach((b) => b.classList.toggle("is-active", b === btn));
       if (initialized) buildChart();
     });
@@ -972,6 +979,7 @@
     if (!active.length) return;
     const preset = TIMEFRAME_PRESETS[currentTimeframe] || TIMEFRAME_PRESETS.daily;
     playIndex = idx;
+    lastPlayStartIndex = idx;
     series.forEach((s) => {
       if (!s.allPoints || !s.allPoints.length) return;
       const at = Math.min(idx, s.allPoints.length - 1);
@@ -1080,7 +1088,11 @@
       return;
     }
     if (playIndex <= 0 || playIndex >= minLen - 1) {
-      playIndex = tailLength - 1; // restart from the earliest full tail
+      // Replay from wherever was last selected (a quick-range jump or a
+      // manual scrub), not always the very earliest fetched data.
+      const fallback = tailLength - 1;
+      playIndex =
+        lastPlayStartIndex !== null && lastPlayStartIndex < minLen - 1 ? lastPlayStartIndex : fallback;
     }
     isPlaying = true;
     updatePlayButton();
