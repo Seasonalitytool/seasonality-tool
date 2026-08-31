@@ -445,10 +445,28 @@
   function buildGradient(hexColor) {
     const { r, g, b } = hexToRgb(hexColor);
     const alpha = parseFloat(cssVar("--chart-fill-alpha")) || 0.2;
-    const g1 = ctx.createLinearGradient(0, 0, 0, canvas.height || 460);
+    // canvas.height is the DPR-scaled backing-store height Chart.js sets for
+    // crisp rendering (often 2x+ the visible size), not the actual CSS
+    // pixel height — using it here made the gradient fade out far below the
+    // visible plot area, so only a solid-looking band near the top ever
+    // showed, and inconsistently so depending on when this ran relative to
+    // layout/DPR. getBoundingClientRect().height is the true rendered size.
+    const h = canvas.getBoundingClientRect().height || canvas.clientHeight || 460;
+    const g1 = ctx.createLinearGradient(0, 0, 0, h);
     g1.addColorStop(0, `rgba(${r}, ${g}, ${b}, ${alpha})`);
     g1.addColorStop(1, `rgba(${r}, ${g}, ${b}, 0)`);
     return g1;
+  }
+
+  // Two standing fill gradients (green/red), rebuilt whenever colors or
+  // chart size might have changed — segment.backgroundColor below just
+  // picks whichever one applies to that segment, so the fill itself
+  // switches to red wherever the line dips below zero instead of using one
+  // fixed color for the whole area.
+  let positiveFillGradient, negativeFillGradient;
+  function rebuildFillGradients() {
+    positiveFillGradient = buildGradient(cssVar("--accent"));
+    negativeFillGradient = buildGradient(cssVar("--negative"));
   }
 
   const zeroLinePlugin = {
@@ -472,6 +490,19 @@
 
   const initialSubset = recompute();
   currentLineColor = lineColorForSign(finalPoint ? finalPoint.avg : null);
+  rebuildFillGradients();
+
+  // Picks the fill/stroke for whichever segment this is, based on that
+  // segment's own value — not the overall year-end sign — so the line and
+  // its fill turn red for any stretch that dips below zero, green
+  // wherever it's above, regardless of how the full year ends up.
+  function segmentIsBelowZero(segCtx) {
+    // In multi-symbol mode the line uses one fixed identity color (see
+    // applyChartColors) so it stays consistent with the legend — don't let
+    // sign-based per-segment coloring override that.
+    if (extraSymbols.length > 0) return false;
+    return (segCtx.p0.parsed.y + segCtx.p1.parsed.y) / 2 < 0;
+  }
 
   const chart = new Chart(ctx, {
     type: "line",
@@ -482,14 +513,18 @@
           label: "Avg cumulative return",
           data: data.map((d) => d.avg),
           borderColor: currentLineColor,
-          backgroundColor: buildGradient(currentLineColor),
+          backgroundColor: positiveFillGradient,
+          segment: {
+            borderColor: (segCtx) => cssVar(segmentIsBelowZero(segCtx) ? "--negative" : "--accent"),
+            backgroundColor: (segCtx) => (segmentIsBelowZero(segCtx) ? negativeFillGradient : positiveFillGradient),
+          },
           borderWidth: 2.25,
           pointRadius: 0,
           pointHoverRadius: 5,
           pointHoverBackgroundColor: cssVar("--bg-elevated"),
           pointHoverBorderColor: currentLineColor,
           pointHoverBorderWidth: 2.5,
-          fill: true,
+          fill: "origin", // fills down to the value 0 (since 0 sits within the visible range), not the chart's bottom edge
           tension: 0.25,
           cubicInterpolationMode: "monotone",
           spanGaps: true,
@@ -580,9 +615,10 @@
     // fixed identity color instead, since a legend needs stable colors per
     // line rather than one that flips with the value's sign.
     currentLineColor = extraSymbols.length > 0 ? cssVar("--accent") : lineColorForSign(finalPoint ? finalPoint.avg : null);
+    rebuildFillGradients(); // colors and/or the canvas's rendered size may have changed
     const ds = chart.data.datasets[0];
-    ds.borderColor = currentLineColor;
-    ds.backgroundColor = buildGradient(currentLineColor);
+    ds.borderColor = currentLineColor; // base/fallback — segment.borderColor overrides per-point when applicable
+    ds.backgroundColor = positiveFillGradient; // base/fallback — segment.backgroundColor overrides per-point
     ds.pointHoverBorderColor = currentLineColor;
     ds.pointHoverBackgroundColor = cssVar("--bg-elevated");
 
@@ -609,7 +645,7 @@
   }
 
   window.addEventListener("resize", () => {
-    chart.data.datasets[0].backgroundColor = buildGradient(currentLineColor);
+    rebuildFillGradients(); // canvas's rendered height changed, so the gradients must be rebuilt to match
     chart.update("none");
   });
 
