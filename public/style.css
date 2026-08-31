@@ -955,16 +955,28 @@ body {
   background: transparent;
   appearance: none;
   -webkit-appearance: none;
+  -moz-appearance: none;
+  /* Some browsers still paint a native rounded "fill" highlight behind a
+     custom thumb even with appearance:none unless the accent color is also
+     neutralized — that stray highlight is what made the handle look like a
+     bigger pale block instead of the slim grip drawn below. */
+  accent-color: transparent;
+  outline: none;
   pointer-events: none;
 }
 
 .range-input::-webkit-slider-runnable-track {
-  background: transparent;
+  background: none;
+  border: none;
   height: 22px;
 }
 .range-input::-moz-range-track {
-  background: transparent;
+  background: none;
+  border: none;
   height: 22px;
+}
+.range-input::-moz-range-progress {
+  background: none;
 }
 
 /* A slim rounded handle rather than a round "ball" — reads as a grip on the
