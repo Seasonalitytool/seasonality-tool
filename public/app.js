@@ -57,6 +57,8 @@
 
   let currentFilter = "all"; // "all" | "bull" | "bear"
   let currentCycle = "all"; // "all" | "election" | "post" | "midterm" | "pre"
+  let currentFedRegime = "all"; // "all" | "cut" | "hike" | "stable"
+  const FED_POLICY_BY_YEAR = window.FED_POLICY_BY_YEAR || {};
 
   // ---- Multi-symbol comparison -----------------------------------------------
   const MAX_LINES = 10; // including S&P 500
@@ -140,6 +142,7 @@
       (y) =>
         (currentFilter === "all" || y.type === currentFilter) &&
         (currentCycle === "all" || cycleTypeForYear(y.year) === currentCycle) &&
+        (currentFedRegime === "all" || FED_POLICY_BY_YEAR[String(y.year)] === currentFedRegime) &&
         y.year >= rangeMin &&
         y.year <= rangeMax
     );
@@ -223,19 +226,20 @@
 
   const FILTER_ADJ = { all: "", bull: "bull ", bear: "bear " };
   const CYCLE_ADJ = { all: "", election: "election ", post: "post-election ", midterm: "midterm ", pre: "pre-election " };
+  const FED_ADJ = { all: "", cut: "rate-cut ", hike: "rate-hike ", stable: "stable-rate " };
 
-  // Combines the bull/bear filter and the election-cycle filter into one
-  // phrase, e.g. "21 years", "6 bull years", "8 midterm years",
-  // "3 bull pre-election years".
-  function phraseYears(filterKey, cycleKey, count) {
-    const adj = FILTER_ADJ[filterKey] + CYCLE_ADJ[cycleKey];
+  // Combines the bull/bear filter, election-cycle filter, and Fed policy
+  // regime filter into one phrase, e.g. "21 years", "6 bull years",
+  // "8 midterm years", "3 bull pre-election rate-hike years".
+  function phraseYears(filterKey, cycleKey, fedKey, count) {
+    const adj = FILTER_ADJ[filterKey] + CYCLE_ADJ[cycleKey] + FED_ADJ[fedKey];
     return adj ? `${count} ${adj}years` : `all ${count} years`;
   }
 
   function updateHeaderTexts(subsetCount) {
-    const phrase = phraseYears(currentFilter, currentCycle, subsetCount);
+    const phrase = phraseYears(currentFilter, currentCycle, currentFedRegime, subsetCount);
     const rangeText = `${rangeMin}–${rangeMax}`;
-    const noMatchPhrase = `${FILTER_ADJ[currentFilter]}${CYCLE_ADJ[currentCycle]}years` || "years";
+    const noMatchPhrase = `${FILTER_ADJ[currentFilter]}${CYCLE_ADJ[currentCycle]}${FED_ADJ[currentFedRegime]}years` || "years";
 
     topbarMeta.textContent = `S&P 500 · ${rangeText} · ${phrase}`;
     panelSub.textContent = subsetCount
@@ -741,6 +745,21 @@
 
       currentCycle = key;
       cycleBar.querySelectorAll(".filter-btn").forEach((b) => b.classList.toggle("is-active", b === btn));
+      refreshChart();
+    });
+  }
+
+  // ---- Fed policy regime filter -----------------------------------------------
+  const fedPolicyBar = document.getElementById("fedPolicyBar");
+  if (fedPolicyBar) {
+    fedPolicyBar.addEventListener("click", (e) => {
+      const btn = e.target.closest(".filter-btn");
+      if (!btn) return;
+      const key = btn.getAttribute("data-fed");
+      if (!key || key === currentFedRegime) return;
+
+      currentFedRegime = key;
+      fedPolicyBar.querySelectorAll(".filter-btn").forEach((b) => b.classList.toggle("is-active", b === btn));
       refreshChart();
     });
   }

@@ -100,6 +100,15 @@
           <span class="pro-badge" id="cycleProBadge" hidden>🔒 Pro</span>
         </div>
 
+        <div class="cycle-bar-row">
+          <div class="filter-bar" role="group" aria-label="Federal Reserve policy regime filter" id="fedPolicyBar">
+            <button class="filter-btn is-active" type="button" data-fed="all">All</button>
+            <button class="filter-btn" type="button" data-fed="cut">Rate Cuts</button>
+            <button class="filter-btn" type="button" data-fed="hike">Rate Hikes</button>
+            <button class="filter-btn" type="button" data-fed="stable">Stable Rates</button>
+          </div>
+        </div>
+
         <div class="range-slider-wrap range-slider-wrap-full">
           <div class="range-slider-label">
             <span>Year range</span>
@@ -255,6 +264,7 @@
   <script src="supabase-config.js"></script>
   <script src="api-config.js"></script>
   <script src="data.js"></script>
+  <script src="fed-policy.js"></script>
   <script src="tickers.js"></script>
   <script src="auth.js"></script>
   <script src="app.js"></script>
