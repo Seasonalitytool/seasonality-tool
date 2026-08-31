@@ -47,6 +47,18 @@
 
   // ---- Constants --------------------------------------------------------------
   const BENCHMARK_SYMBOL = "^GSPC";
+  // Friendly names for common index tickers — falls back to the raw symbol
+  // (minus a leading "^") for anything not in this small list, so the axis
+  // title never breaks if the benchmark ever changes.
+  const BENCHMARK_DISPLAY_NAMES = {
+    "^GSPC": "S&P 500",
+    "^DJI": "Dow Jones",
+    "^IXIC": "Nasdaq",
+    "^RUT": "Russell 2000",
+  };
+  function benchmarkDisplayName() {
+    return BENCHMARK_DISPLAY_NAMES[BENCHMARK_SYMBOL] || BENCHMARK_SYMBOL.replace(/^\^/, "");
+  }
   const SECTORS = [
     { symbol: "XLK", name: "Technology" },
     { symbol: "XLF", name: "Financials" },
@@ -444,6 +456,7 @@
       chart.options.scales.y.ticks.color = cssVar("--chart-tick");
       chart.options.scales.x.grid.color = cssVar("--chart-grid");
       chart.options.scales.y.grid.color = cssVar("--chart-grid");
+      chart.options.scales.x.title.text = `vs. ${benchmarkDisplayName()}`; // stays correct if the benchmark ever changes
       chart.update(mode);
       // Chart.js only reads a dataset's `hidden` flag the first time it
       // creates that dataset's internal meta — reassigning chart.data.datasets
@@ -468,17 +481,38 @@
               type: "linear",
               min: range.min,
               max: range.max,
-              title: { display: true, text: "JdK RS-Ratio", color: cssVar("--text-tertiary"), font: { size: 11 } },
+              title: {
+                display: true,
+                text: `vs. ${benchmarkDisplayName()}`,
+                color: cssVar("--text-tertiary"),
+                font: { size: 11 },
+              },
               grid: { color: cssVar("--chart-grid") },
-              ticks: { color: cssVar("--chart-tick"), font: { family: "Inter", size: 11 } },
+              ticks: {
+                color: cssVar("--chart-tick"),
+                font: { family: "Inter", size: 11 },
+                callback: (value, index, ticksArray) => {
+                  if (index === 0) return "Underperforming";
+                  if (index === ticksArray.length - 1) return "Outperforming";
+                  return value;
+                },
+              },
             },
             y: {
               type: "linear",
               min: range.min,
               max: range.max,
-              title: { display: true, text: "JdK RS-Momentum", color: cssVar("--text-tertiary"), font: { size: 11 } },
+              title: { display: true, text: "Momentum", color: cssVar("--text-tertiary"), font: { size: 11 } },
               grid: { color: cssVar("--chart-grid") },
-              ticks: { color: cssVar("--chart-tick"), font: { family: "Inter", size: 11 } },
+              ticks: {
+                color: cssVar("--chart-tick"),
+                font: { family: "Inter", size: 11 },
+                callback: (value, index, ticksArray) => {
+                  if (index === 0) return "Slowing";
+                  if (index === ticksArray.length - 1) return "Accelerating";
+                  return value;
+                },
+              },
             },
           },
           plugins: {
@@ -496,7 +530,8 @@
                   const ds = items[0].dataset;
                   return ds.fullName && ds.fullName !== ds.label ? `${ds.label} — ${ds.fullName}` : ds.label;
                 },
-                label: (item) => `RS-Ratio: ${item.parsed.x.toFixed(2)} · RS-Momentum: ${item.parsed.y.toFixed(2)}`,
+                label: (item) =>
+                  `vs. ${benchmarkDisplayName()}: ${item.parsed.x.toFixed(2)} · Momentum: ${item.parsed.y.toFixed(2)}`,
               },
             },
             zoom: {
