@@ -771,6 +771,26 @@
   const rangeLabel = document.getElementById("rangeLabel");
   const yearGrid = document.getElementById("yearGrid");
 
+  // A native range input maps its value linearly across (max - min) steps —
+  // i.e. N-1 for N years — while the year-grid draws N equal-width boxes.
+  // Left unfixed, the handle drifts away from its box's true edge everywhere
+  // except the two extremes. Stretch each input to span N boxes instead of
+  // N-1 (and, for the max handle, shift it right by one box) so the min
+  // handle always sits exactly on its box's left edge and the max handle on
+  // its box's right edge — the thumb-width halves below match the 7px
+  // handle set in style.css.
+  function layoutRangeInputs() {
+    if (!rangeMinInput || !rangeMaxInput) return;
+    const yearCount = dataMaxYear - dataMinYear + 1;
+    if (yearCount < 1) return;
+    const thumbHalf = 3.5;
+    const stretchedWidth = `calc(${((yearCount - 1) / yearCount) * 100}% + 7px)`;
+    rangeMinInput.style.left = `-${thumbHalf}px`;
+    rangeMinInput.style.width = stretchedWidth;
+    rangeMaxInput.style.left = `calc(${100 / yearCount}% - ${thumbHalf}px)`;
+    rangeMaxInput.style.width = stretchedWidth;
+  }
+
   // One small box per calendar year in the dataset, highlighted only when
   // that year satisfies every active filter (Bull/Bear, election cycle, Fed
   // policy regime) AND falls inside the selected year range — so a narrow
@@ -839,6 +859,7 @@
     rangeMaxInput.max = dataMaxYear;
     rangeMaxInput.value = rangeMax;
 
+    layoutRangeInputs();
     updateFillAndLabel();
 
     rangeMinInput.addEventListener("input", () => {
