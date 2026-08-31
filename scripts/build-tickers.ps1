@@ -6,8 +6,8 @@
   dropdown filters locally, with no live API call needed just to search.
 
   Source: NASDAQ Trader SymDir (nasdaqlisted.txt + otherlisted.txt), which
-  together cover all NASDAQ-, NYSE-, and NYSE American-listed securities.
-  ETFs and test issues are excluded to keep the list focused on companies.
+  together cover all NASDAQ-, NYSE-, and NYSE American-listed securities,
+  companies and ETFs alike (e.g. QQQ, SPY, IWM). Test issues are excluded.
 
   Re-run any time to refresh the list:
       powershell -File scripts/build-tickers.ps1
@@ -31,7 +31,6 @@ function Add-Ticker($symbol, $name, $etf, $testIssue) {
     $symbol = $symbol.Trim()
     if ($symbol -eq "" -or $symbol -match "[\.\$]" -or $symbol.Length -gt 6) { return } # skip odd/derivative symbols
     if ($testIssue -eq "Y") { return }
-    if ($etf -eq "Y") { return } # focus the search list on companies, not ETFs
     if ($seen.ContainsKey($symbol)) { return }
     $seen[$symbol] = $true
     # Trim common boilerplate suffixes so names stay compact in the dropdown.
