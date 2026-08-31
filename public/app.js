@@ -711,6 +711,7 @@
     hasSelection = false;
     updateHeaderTexts(subset.length);
     renderReadout(finalPoint, subset.length, data.length - 1);
+    renderYearGrid();
     applyChartColors(); // also calls chart.update()
     renderLegend();
   }
@@ -767,16 +768,39 @@
   // ---- Year-range dual slider -----------------------------------------------
   const rangeMinInput = document.getElementById("rangeMin");
   const rangeMaxInput = document.getElementById("rangeMax");
-  const rangeFill = document.getElementById("rangeFill");
   const rangeLabel = document.getElementById("rangeLabel");
+  const yearGrid = document.getElementById("yearGrid");
+
+  // One small box per calendar year in the dataset, highlighted only when
+  // that year satisfies every active filter (Bull/Bear, election cycle, Fed
+  // policy regime) AND falls inside the selected year range — so a narrow
+  // filter (e.g. "Stable Rates" matching only 16 of 100 years) is obvious at
+  // a glance instead of hidden behind a plain range bar.
+  function renderYearGrid() {
+    if (!yearGrid) return;
+    yearGrid.innerHTML = "";
+    const frag = document.createDocumentFragment();
+    for (let year = dataMinYear; year <= dataMaxYear; year++) {
+      const yearEntry = years.find((y) => y.year === year);
+      const box = document.createElement("div");
+      box.className = "year-box";
+      const active =
+        !!yearEntry &&
+        year >= rangeMin &&
+        year <= rangeMax &&
+        (currentFilter === "all" || yearEntry.type === currentFilter) &&
+        (currentCycle === "all" || cycleTypeForYear(year) === currentCycle) &&
+        (currentFedRegime === "all" || FED_POLICY_BY_YEAR[String(year)] === currentFedRegime);
+      if (active) box.classList.add("is-active");
+      box.title = active ? `${year} — included` : `${year} — excluded`;
+      frag.appendChild(box);
+    }
+    yearGrid.appendChild(frag);
+  }
 
   function updateFillAndLabel() {
-    const span = dataMaxYear - dataMinYear || 1;
-    const leftPct = ((rangeMin - dataMinYear) / span) * 100;
-    const rightPct = ((dataMaxYear - rangeMax) / span) * 100;
-    rangeFill.style.left = leftPct + "%";
-    rangeFill.style.right = rightPct + "%";
     rangeLabel.textContent = `${rangeMin}–${rangeMax}`;
+    renderYearGrid();
 
     // The two <input type="range"> thumbs sit on top of each other when
     // dragged to the same value (e.g. both pushed to the far edge) — without
