@@ -1010,6 +1010,10 @@ body {
   max-width: 100%;
 }
 
+.cycle-bar-row .filter-bar {
+  margin-bottom: 0;
+}
+
 #cycleBar {
   flex-wrap: wrap;
 }
