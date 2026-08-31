@@ -219,6 +219,7 @@
   const panelSub = document.getElementById("panelSub");
   const footerNote = document.getElementById("footerNote");
   const statValue = document.getElementById("statValue");
+  const statPill = document.getElementById("statPill");
 
   const FILTER_ADJ = { all: "", bull: "bull ", bear: "bear " };
   const CYCLE_ADJ = { all: "", election: "election ", post: "post-election ", midterm: "midterm ", pre: "pre-election " };
@@ -246,9 +247,11 @@
       const v = finalPoint.avg;
       statValue.textContent = (v >= 0 ? "+" : "") + v.toFixed(2) + "%";
       statValue.classList.toggle("negative", v < 0);
+      if (statPill) statPill.classList.toggle("negative", v < 0);
     } else {
       statValue.textContent = "—";
       statValue.classList.remove("negative");
+      if (statPill) statPill.classList.remove("negative");
     }
   }
 

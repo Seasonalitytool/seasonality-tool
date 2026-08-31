@@ -308,6 +308,11 @@ body {
   min-width: 150px;
 }
 
+.stat-pill.negative {
+  background: var(--negative-soft);
+  border-color: var(--negative-border);
+}
+
 .stat-label {
   font-size: 10.5px;
   text-transform: uppercase;
