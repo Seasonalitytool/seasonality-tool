@@ -25,6 +25,9 @@
   --chart-zero: rgba(158, 155, 148, 0.35);
   --chart-fill-alpha: 0.28;
   --overlay-color: #e0a640;         /* amber — current-year overlay line, kept distinct from green/red */
+  --neutral: #4d8fdd;               /* blue — for controls with no positive/negative meaning, like the year-range slider */
+  --neutral-soft: rgba(77, 143, 221, 0.16);
+  --neutral-border: rgba(77, 143, 221, 0.4);
 
   /* One consistent typeface everywhere — headings, body, and numbers alike. */
   --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -57,6 +60,9 @@
   --chart-zero: rgba(90, 86, 72, 0.3);
   --chart-fill-alpha: 0.14;
   --overlay-color: #a86a10;
+  --neutral: #1d5fad;
+  --neutral-soft: rgba(29, 95, 173, 0.12);
+  --neutral-border: rgba(29, 95, 173, 0.35);
 }
 
 * { box-sizing: border-box; }
@@ -892,7 +898,7 @@ body {
 .range-slider-label #rangeLabel {
   font-family: var(--font-mono);
   font-size: 12.5px;
-  color: var(--accent);
+  color: var(--neutral);
 }
 
 .range-slider {
@@ -916,7 +922,7 @@ body {
   top: 50%;
   height: 3px;
   transform: translateY(-50%);
-  background: var(--accent);
+  background: var(--neutral);
   border-radius: 2px;
 }
 
@@ -949,9 +955,9 @@ body {
   width: 15px;
   height: 15px;
   border-radius: 50%;
-  background: var(--accent);
+  background: var(--neutral);
   border: 2px solid var(--bg-elevated);
-  box-shadow: 0 0 0 1px var(--accent-border);
+  box-shadow: 0 0 0 1px var(--neutral-border);
   cursor: pointer;
   /* Centers the 15px thumb on the 3px track, which sits at the vertical
      midpoint of this 22px hit box (WebKit doesn't auto-center a thumb
@@ -964,14 +970,14 @@ body {
   width: 15px;
   height: 15px;
   border-radius: 50%;
-  background: var(--accent);
+  background: var(--neutral);
   border: 2px solid var(--bg-elevated);
-  box-shadow: 0 0 0 1px var(--accent-border);
+  box-shadow: 0 0 0 1px var(--neutral-border);
   cursor: pointer;
 }
 
 .range-input:focus-visible::-webkit-slider-thumb {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--neutral);
   outline-offset: 2px;
 }
 
