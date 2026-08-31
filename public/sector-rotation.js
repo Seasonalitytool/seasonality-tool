@@ -623,6 +623,7 @@
   }
 
   async function loadGroup(group) {
+    closeNewGroupPanel(); // switching groups while creating a new one should close that panel
     activeGroupId = group.id;
     renderGroupBar();
     const subEl = document.getElementById("rrgPanelSub");
