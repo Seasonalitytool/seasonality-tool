@@ -612,9 +612,21 @@
   }
 
   // ---- Load / add / remove --------------------------------------------------
+  // "Sectors" keeps its specific wording; every other group (built-in or
+  // custom) gets a description naming itself and how many tickers it holds.
+  function groupDescription(group) {
+    if (group.id === "sectors") {
+      return "Relative strength vs. the S&P 500 and its momentum, for the 11 S&P 500 sector ETFs.";
+    }
+    const count = group.symbols.length;
+    return `Relative strength vs. the S&P 500 and its momentum, for ${group.name} (${count} ticker${count === 1 ? "" : "s"}).`;
+  }
+
   async function loadGroup(group) {
     activeGroupId = group.id;
     renderGroupBar();
+    const subEl = document.getElementById("rrgPanelSub");
+    if (subEl) subEl.textContent = groupDescription(group);
     setFooter(`Loading ${group.name}…`);
     try {
       benchmark = await fetchPricesCached(BENCHMARK_SYMBOL);
