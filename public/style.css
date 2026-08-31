@@ -25,9 +25,9 @@
   --chart-zero: rgba(158, 155, 148, 0.35);
   --chart-fill-alpha: 0.28;
   --overlay-color: #e0a640;         /* amber — current-year overlay line, kept distinct from green/red */
-  --neutral: #ececea;               /* off-white — for controls with no positive/negative meaning, like the year-range slider */
-  --neutral-soft: rgba(236, 234, 234, 0.16);
-  --neutral-border: rgba(236, 234, 234, 0.4);
+  --neutral: #b9b7b1;               /* soft warm grey — for controls with no positive/negative meaning, like the year-range slider */
+  --neutral-soft: rgba(185, 183, 177, 0.16);
+  --neutral-border: rgba(185, 183, 177, 0.4);
 
   /* One consistent typeface everywhere — headings, body, and numbers alike. */
   --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -60,9 +60,9 @@
   --chart-zero: rgba(90, 86, 72, 0.3);
   --chart-fill-alpha: 0.14;
   --overlay-color: #a86a10;
-  --neutral: #1c1b17;
-  --neutral-soft: rgba(28, 27, 23, 0.1);
-  --neutral-border: rgba(28, 27, 23, 0.3);
+  --neutral: #6b6858;
+  --neutral-soft: rgba(107, 104, 88, 0.12);
+  --neutral-border: rgba(107, 104, 88, 0.32);
 }
 
 * { box-sizing: border-box; }
@@ -962,30 +962,31 @@ body {
   height: 22px;
 }
 
+/* A slim rounded handle rather than a round "ball" — reads as a grip on the
+   year-box track instead of a foreign circular control dropped on top of it. */
 .range-input::-webkit-slider-thumb {
   appearance: none;
   -webkit-appearance: none;
   pointer-events: auto;
-  width: 15px;
-  height: 15px;
-  border-radius: 50%;
+  width: 7px;
+  height: 20px;
+  border-radius: 3px;
   background: var(--neutral);
-  border: 2px solid var(--bg-elevated);
+  border: 1px solid var(--bg-elevated);
   box-shadow: 0 0 0 1px var(--neutral-border);
   cursor: pointer;
-  /* Centers the 15px thumb on the 3px track, which sits at the vertical
-     midpoint of this 22px hit box (WebKit doesn't auto-center a thumb
-     against a custom-height runnable track). */
-  margin-top: 3.5px;
+  /* Centers the 20px-tall handle within this 22px hit box (WebKit doesn't
+     auto-center a thumb against a custom-height runnable track). */
+  margin-top: 1px;
 }
 
 .range-input::-moz-range-thumb {
   pointer-events: auto;
-  width: 15px;
-  height: 15px;
-  border-radius: 50%;
+  width: 7px;
+  height: 20px;
+  border-radius: 3px;
   background: var(--neutral);
-  border: 2px solid var(--bg-elevated);
+  border: 1px solid var(--bg-elevated);
   box-shadow: 0 0 0 1px var(--neutral-border);
   cursor: pointer;
 }
