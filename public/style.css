@@ -28,6 +28,7 @@
   --neutral: #b9b7b1;               /* soft warm grey — for controls with no positive/negative meaning, like the year-range slider */
   --neutral-soft: rgba(185, 183, 177, 0.16);
   --neutral-border: rgba(185, 183, 177, 0.4);
+  --metal-thumb-grad: linear-gradient(180deg, #fafaf8 0%, #cfcfcb 28%, #8b8b87 50%, #b5b5b1 72%, #e6e6e3 100%);
 
   /* One consistent typeface everywhere — headings, body, and numbers alike. */
   --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -63,6 +64,7 @@
   --neutral: #6b6858;
   --neutral-soft: rgba(107, 104, 88, 0.12);
   --neutral-border: rgba(107, 104, 88, 0.32);
+  --metal-thumb-grad: linear-gradient(180deg, #4a4844 0%, #6d6a62 28%, #837e72 50%, #63605a 72%, #38362f 100%);
 }
 
 * { box-sizing: border-box; }
@@ -916,21 +918,53 @@ body {
   display: flex;
   gap: 1px;
   pointer-events: none;
+  /* Recessed brushed-metal channel the boxes sit in. */
+  padding: 2px 0;
+  border-radius: 3px;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.35), rgba(255, 255, 255, 0.04) 45%, rgba(0, 0, 0, 0.3));
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.5);
 }
 
 .year-box {
   flex: 1 1 0;
   height: 100%;
   min-width: 1px;
-  background: var(--panel-border);
   border-radius: 1px;
-  opacity: 0.55;
-  transition: background 0.15s ease, opacity 0.15s ease;
+  opacity: 0.6;
+  transition: background 0.15s ease, opacity 0.15s ease, box-shadow 0.15s ease;
+  /* Dull brushed-steel look for excluded years. */
+  background: linear-gradient(180deg, #4a4a4a, #2c2c2c 50%, #3a3a3a);
+}
+
+:root[data-theme="light"] .year-box {
+  background: linear-gradient(180deg, #cfcbbd, #b4af9e 50%, #c4c0af);
 }
 
 .year-box.is-active {
-  background: var(--neutral);
   opacity: 1;
+  /* Polished chrome band — a bright highlight streak across a mid-tone
+     metal base, with a soft glow using the neutral accent. */
+  background: linear-gradient(
+    180deg,
+    #f2f2f0 0%,
+    #c9c9c6 30%,
+    #8f8f8c 50%,
+    #b7b7b3 65%,
+    #dcdcd9 100%
+  );
+  box-shadow: 0 0 4px var(--neutral-border);
+}
+
+:root[data-theme="light"] .year-box.is-active {
+  background: linear-gradient(
+    180deg,
+    #4a4844 0%,
+    #6d6a62 30%,
+    #837e72 50%,
+    #63605a 65%,
+    #38362f 100%
+  );
+  box-shadow: 0 0 4px var(--neutral-border);
 }
 
 .year-grid-hint {
@@ -988,9 +1022,9 @@ body {
   width: 7px;
   height: 20px;
   border-radius: 3px;
-  background: var(--neutral);
+  background: var(--metal-thumb-grad);
   border: 1px solid var(--bg-elevated);
-  box-shadow: 0 0 0 1px var(--neutral-border);
+  box-shadow: 0 0 0 1px var(--neutral-border), 0 0 5px var(--neutral-border);
   cursor: pointer;
   /* Centers the 20px-tall handle within this 22px hit box (WebKit doesn't
      auto-center a thumb against a custom-height runnable track). */
@@ -1002,9 +1036,9 @@ body {
   width: 7px;
   height: 20px;
   border-radius: 3px;
-  background: var(--neutral);
+  background: var(--metal-thumb-grad);
   border: 1px solid var(--bg-elevated);
-  box-shadow: 0 0 0 1px var(--neutral-border);
+  box-shadow: 0 0 0 1px var(--neutral-border), 0 0 5px var(--neutral-border);
   cursor: pointer;
 }
 
