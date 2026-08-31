@@ -25,9 +25,9 @@
   --chart-zero: rgba(158, 155, 148, 0.35);
   --chart-fill-alpha: 0.28;
   --overlay-color: #e0a640;         /* amber — current-year overlay line, kept distinct from green/red */
-  --neutral: #4d8fdd;               /* blue — for controls with no positive/negative meaning, like the year-range slider */
-  --neutral-soft: rgba(77, 143, 221, 0.16);
-  --neutral-border: rgba(77, 143, 221, 0.4);
+  --neutral: #ececea;               /* off-white — for controls with no positive/negative meaning, like the year-range slider */
+  --neutral-soft: rgba(236, 234, 234, 0.16);
+  --neutral-border: rgba(236, 234, 234, 0.4);
 
   /* One consistent typeface everywhere — headings, body, and numbers alike. */
   --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -60,9 +60,9 @@
   --chart-zero: rgba(90, 86, 72, 0.3);
   --chart-fill-alpha: 0.14;
   --overlay-color: #a86a10;
-  --neutral: #1d5fad;
-  --neutral-soft: rgba(29, 95, 173, 0.12);
-  --neutral-border: rgba(29, 95, 173, 0.35);
+  --neutral: #1c1b17;
+  --neutral-soft: rgba(28, 27, 23, 0.1);
+  --neutral-border: rgba(28, 27, 23, 0.3);
 }
 
 * { box-sizing: border-box; }
