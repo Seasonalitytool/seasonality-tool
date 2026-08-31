@@ -613,6 +613,15 @@
   updateHeaderTexts(initialSubset.length);
   renderReadout(finalPoint, initialSubset.length, data.length - 1);
 
+  // The very first gradient build above (before the chart even existed) can
+  // be sized off the canvas's pre-layout height on some loads — a stale
+  // viewport size, layout not yet settled, fonts still swapping in — which
+  // is why the green/red fade sometimes looked inconsistent right after a
+  // refresh until something else (a filter click, a window resize) forced
+  // it to rebuild. Rebuilding once more on the next frame, once layout has
+  // definitely settled, fixes it without waiting on user interaction.
+  requestAnimationFrame(() => applyChartColors());
+
   // Re-derives every canvas color (line, fill, grid, ticks, axis, zero line)
   // from the current CSS custom properties — called on theme toggle and
   // whenever the composite's end-of-year sign might have flipped.
